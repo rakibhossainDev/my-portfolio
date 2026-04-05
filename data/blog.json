@@ -1,0 +1,44 @@
+[
+  {
+    "id": "1",
+    "slug": "flutter-state-management-guide",
+    "title": "Choosing State Management in Flutter in 2026",
+    "date": "2026-03-12",
+    "excerpt": "A practical walkthrough of Provider, Riverpod, and Bloc — when each shines and how to keep your codebase maintainable as the app grows.",
+    "imageSrc": "/placeholder-blog.svg",
+    "imageAlt": "Flutter state management abstract",
+    "content": [
+      "State management is one of the first architectural decisions you make in a Flutter app — and one of the easiest to get wrong if you copy patterns without understanding the trade-offs.",
+      "Provider remains a solid default for smaller teams: it is approachable, well documented, and plays nicely with the framework. When complexity grows, Riverpod adds compile-time safety and better test ergonomics. Bloc shines when you want explicit, event-driven flows and predictable state machines.",
+      "Whichever you pick, keep boundaries clear: UI listens to state, business logic lives outside widgets, and side effects stay in one place. That discipline matters more than the library name on the tin."
+    ]
+  },
+  {
+    "id": "2",
+    "slug": "performance-profiling-flutter",
+    "title": "Profiling Flutter Apps Without the Guesswork",
+    "date": "2026-02-04",
+    "excerpt": "How I use DevTools, frame timing, and rebuild tracking to find jank before users do — plus a short checklist for release builds.",
+    "imageSrc": "/placeholder-blog.svg",
+    "imageAlt": "Performance and DevTools",
+    "content": [
+      "Performance work starts in profile mode, not release guesses. Flutter DevTools gives you a timeline of frames, GPU work, and expensive rebuilds — use it early when something feels sluggish.",
+      "I watch for rebuild storms: a single ChangeNotifier fanning out too wide, or lists rebuilding entire subtrees. Sometimes the fix is a const constructor; sometimes it is restructuring state so only the leaf that needs to paint actually invalidates.",
+      "Before shipping, run through a short checklist: profile on a mid-range device, scroll your heaviest screens for thirty seconds, and confirm you are not blocking the UI isolate on I/O or large JSON parses."
+    ]
+  },
+  {
+    "id": "3",
+    "slug": "design-systems-mobile-teams",
+    "title": "Design Systems That Actually Work for Mobile Teams",
+    "date": "2026-01-18",
+    "excerpt": "Tokens, components, and documentation patterns that help designers and Flutter devs stay aligned from MVP to production.",
+    "imageSrc": "/placeholder-blog.svg",
+    "imageAlt": "Design system mobile",
+    "content": [
+      "A design system on mobile is not just a Figma file — it is the contract between design and engineering. Tokens for color, type, and spacing should map cleanly to ThemeData and reusable widgets.",
+      "Name components the way your team talks about them: PrimaryButton, not BlueRoundedThing. Document variants (loading, disabled, destructive) next to the widget API so nobody has to guess from screenshots.",
+      "Start small: ship a handful of high-traffic components perfectly, then grow. A thin system used consistently beats a thick system that nobody adopts."
+    ]
+  }
+]

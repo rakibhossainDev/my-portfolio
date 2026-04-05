@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" fill="none">
+  <defs>
+    <linearGradient id="p" x1="0" y1="0" x2="400" y2="400">
+      <stop stop-color="#e0e7ff"/>
+      <stop offset="1" stop-color="#ede9fe"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#p)"/>
+  <circle cx="200" cy="160" r="56" fill="#c4b5fd"/>
+  <ellipse cx="200" cy="300" rx="120" ry="72" fill="#a78bfa"/>
+  <text x="200" y="210" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#5b21b6">Your photo</text>
+</svg>

@@ -1,0 +1,8 @@
+[
+  { "name": "Flutter", "percent": 95 },
+  { "name": "Dart", "percent": 92 },
+  { "name": "Firebase", "percent": 88 },
+  { "name": "REST / APIs", "percent": 85 },
+  { "name": "UI / UX", "percent": 90 },
+  { "name": "State management", "percent": 87 }
+]

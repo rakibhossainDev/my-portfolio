@@ -1,0 +1,54 @@
+[
+  {
+    "id": "1",
+    "title": "Noakhali Online Seba",
+    "description": "নোয়াখালীর মানুষদের জীবনযাত্রার মান আরও বৃদ্ধি করতে আমরাই প্রথম নিয়ে আসলাম নোয়াখালী অনলাইন সেবা অ্যাপ। এই অ্যাপের মাধ্যমে স্থানীয় সেবাসমূহ সহজে পাওয়া যায়।",
+    "tags": ["Flutter", "Firebase", "Local Services"],
+    "imageSrc": "/placeholder-project.svg",
+    "imageAlt": "Noakhali Online Seba app preview",
+    "liveUrl": "#",
+    "codeUrl": "#",
+    "stars": 128,
+    "gallery": [],
+    "detailMarkdown": "## Overview\n\nLocal services discovery for Noakhali — built with **Flutter** and **Firebase**.\n\n### Highlights\n- Fast listings\n- Bangla-first UX"
+  },
+  {
+    "id": "2",
+    "title": "নবপ্রত্যয় জাগ্রত বাংলাদেশ",
+    "description": "'নবপ্রত্যয় যুব সংগঠন' সরকারি নিবন্ধিত একটি সামাজিক সংগঠন। এই অ্যাপের মাধ্যমে সংগঠনের সকল কার্যক্রম, ইভেন্ট এবং সদস্যদের তথ্য সহজে ম্যানেজ করা যায়।",
+    "tags": ["Flutter", "Firebase", "Social Organization"],
+    "imageSrc": "/placeholder-project.svg",
+    "imageAlt": "নবপ্রত্যয় app preview",
+    "liveUrl": "#",
+    "codeUrl": "#",
+    "stars": 86,
+    "gallery": [],
+    "detailMarkdown": "## Organization app\n\nMember management, events, and updates in one place."
+  },
+  {
+    "id": "3",
+    "title": "HSC Result Check 2023",
+    "description": "এইচএসসি পরীক্ষার্থীদের জন্য দ্রুত এবং সহজে রেজাল্ট চেক করার জন্য ডিজাইন করা একটি সম্পূর্ণ বাংলা অ্যাপ।",
+    "tags": ["Flutter", "Education", "Result Portal"],
+    "imageSrc": "/placeholder-project.svg",
+    "imageAlt": "HSC Result Check app preview",
+    "liveUrl": "#",
+    "codeUrl": "#",
+    "stars": 2400,
+    "gallery": [],
+    "detailMarkdown": "## Result portal\n\nBangla UI for quick **HSC** result lookup."
+  },
+  {
+    "id": "4",
+    "title": "Neuron - Mind Machine",
+    "description": "Neuron হলো একটি Super Psycho Technological Mind Machine যা Psychology ও Technology এর সমন্বয়ে মানব মস্তিষ্কের উন্নতিসাধন করে।",
+    "tags": ["Flutter", "Psychology", "Self Development"],
+    "imageSrc": "/placeholder-project.svg",
+    "imageAlt": "Neuron app preview",
+    "liveUrl": "#",
+    "codeUrl": "#",
+    "stars": 512,
+    "gallery": [],
+    "detailMarkdown": "## Neuron\n\nPsychology meets product design — self-development flows and journaling."
+  }
+]

@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --accent-from: #7c3aed;
+  --accent-to: #2563eb;
+  --glass-border: rgba(255, 255, 255, 0.65);
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --font-ui-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Bengali UI: Hind Siliguri when locale is BN (see `preferences-provider.tsx`). */
+html.locale-bn {
+  --font-ui-sans: var(--font-hind-siliguri), var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-ui-sans);
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: light;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-ui-sans);
+}
+
+/* Premium mesh-style page backdrop */
+.page-gradient {
+  background-color: #f4f6fb;
+  background-image:
+    radial-gradient(ellipse 900px 700px at 0% 0%, rgba(124, 58, 237, 0.14), transparent 50%),
+    radial-gradient(ellipse 800px 600px at 100% 5%, rgba(37, 99, 235, 0.12), transparent 48%),
+    radial-gradient(ellipse 700px 500px at 50% 100%, rgba(99, 102, 241, 0.1), transparent 55%),
+    radial-gradient(ellipse 500px 400px at 80% 60%, rgba(14, 165, 233, 0.06), transparent 50%),
+    linear-gradient(175deg, #fdfdff 0%, #eef2ff 38%, #f1f5f9 72%, #f8fafc 100%);
+  background-attachment: fixed;
+}
+
+/* Case-study / blog markdown without @tailwindcss/typography */
+.markdown-detail {
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: #334155;
+}
+.markdown-detail > :first-child {
+  margin-top: 0;
+}
+.markdown-detail h1,
+.markdown-detail h2,
+.markdown-detail h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  scroll-margin-top: 6rem;
+}
+.markdown-detail h1 {
+  font-size: 1.5rem;
+}
+.markdown-detail h2 {
+  font-size: 1.25rem;
+}
+.markdown-detail h3 {
+  font-size: 1.1rem;
+}
+.markdown-detail p {
+  margin: 0 0 1rem;
+}
+.markdown-detail ul,
+.markdown-detail ol {
+  margin: 0 0 1rem;
+  padding-left: 1.35rem;
+}
+.markdown-detail li {
+  margin: 0.25rem 0;
+}
+.markdown-detail a {
+  color: #7c3aed;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.markdown-detail a:hover {
+  color: #5b21b6;
+}
+.markdown-detail code {
+  font-size: 0.875em;
+  padding: 0.15em 0.4em;
+  border-radius: 0.25rem;
+  background: rgba(124, 58, 237, 0.08);
+  color: #5b21b6;
+}
+.markdown-detail pre {
+  margin: 1rem 0;
+  padding: 1rem;
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(15, 23, 42, 0.04);
+  font-size: 0.8125rem;
+}
+.markdown-detail pre code {
+  padding: 0;
+  background: none;
+  color: inherit;
+}
+.markdown-detail blockquote {
+  margin: 1rem 0;
+  padding-left: 1rem;
+  border-left: 3px solid rgba(124, 58, 237, 0.35);
+  color: #64748b;
+}
+.markdown-detail table {
+  width: 100%;
+  margin: 1rem 0;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.markdown-detail th,
+.markdown-detail td {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+}
+.markdown-detail th {
+  background: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  color: #0f172a;
+}
+.markdown-detail hr {
+  margin: 1.5rem 0;
+  border: 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+/* Card lift + glow micro-interaction */
+@keyframes card-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 12px 40px -20px rgba(124, 58, 237, 0.25),
+      0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+  }
+  50% {
+    box-shadow:
+      0 20px 50px -15px rgba(37, 99, 235, 0.35),
+      0 0 0 1px rgba(255, 255, 255, 0.75) inset;
+  }
+}
+
+.card-interactive {
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease,
+    border-color 0.25s ease;
+}
+
+.card-interactive:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 24px 48px -20px rgba(124, 58, 237, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.8) inset,
+    0 0 60px -20px rgba(37, 99, 235, 0.25);
+}
+
+.btn-interactive {
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s ease,
+    filter 0.2s ease;
+}
+
+.btn-interactive:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+.btn-interactive:active {
+  transform: translateY(0);
+}
+
+/* Horizontal strips: scroll without visible scrollbars */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes hero-orbit {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(0, -8px, 0) scale(1.04);
+  }
+  66% {
+    transform: translate3d(0, 5px, 0) scale(0.98);
+  }
+}
+
+.animate-hero-orbit {
+  animation: hero-orbit 5s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-orbit {
+    animation: none;
+  }
+}
