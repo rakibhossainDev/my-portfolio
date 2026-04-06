@@ -128,10 +128,11 @@ export type SiteRecycleBin = {
   projects: RecycleBinEntry<Project>[];
   blogs: RecycleBinEntry<BlogPost>[];
   messages: RecycleBinEntry<ContactMessage>[];
+  certificates: RecycleBinEntry<Certificate>[];
 };
 
 export function emptyRecycleBin(): SiteRecycleBin {
-  return { projects: [], blogs: [], messages: [] };
+  return { projects: [], blogs: [], messages: [], certificates: [] };
 }
 
 export type SiteDataPayload = {
@@ -343,6 +344,14 @@ function isRecycleBinMessageEntry(x: unknown): x is RecycleBinEntry<ContactMessa
   return typeof it.id === "string";
 }
 
+function isRecycleBinCertificateEntry(x: unknown): x is RecycleBinEntry<Certificate> {
+  if (!x || typeof x !== "object") return false;
+  const o = x as Record<string, unknown>;
+  if (typeof o.deletedAt !== "string" || !o.item || typeof o.item !== "object") return false;
+  const it = o.item as Record<string, unknown>;
+  return typeof it.id === "string";
+}
+
 export function parseRecycleBin(raw: unknown): SiteRecycleBin {
   const empty = emptyRecycleBin();
   if (!raw || typeof raw !== "object") return empty;
@@ -359,7 +368,10 @@ export function parseRecycleBin(raw: unknown): SiteRecycleBin {
   const messages = Array.isArray(o.messages)
     ? o.messages.filter(isRecycleBinMessageEntry).map((e) => ({ deletedAt: e.deletedAt, item: e.item }))
     : [];
-  return { projects, blogs, messages };
+  const certificates = Array.isArray(o.certificates)
+    ? o.certificates.filter(isRecycleBinCertificateEntry).map((e) => ({ deletedAt: e.deletedAt, item: e.item }))
+    : [];
+  return { projects, blogs, messages, certificates };
 }
 
 function isStatCms(x: unknown): x is StatCms {

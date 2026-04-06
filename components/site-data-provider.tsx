@@ -89,12 +89,15 @@ type SiteDataContextValue = {
   setResumeFile: (file: File | null) => Promise<void>;
   addContactMessage: (input: { name: string; email: string; subject: string; body: string }) => void;
   deleteContactMessage: (id: string) => void;
+  deleteCertificate: (id: string) => void;
   restoreRecycleProject: (id: string) => void;
   purgeRecycleProject: (id: string) => void;
   restoreRecycleBlog: (id: string) => void;
   purgeRecycleBlog: (id: string) => void;
   restoreRecycleMessage: (id: string) => void;
   purgeRecycleMessage: (id: string) => void;
+  restoreRecycleCertificate: (id: string) => void;
+  purgeRecycleCertificate: (id: string) => void;
   resetToDefaults: () => Promise<void>;
   updateSectionTaglines: (patch: Partial<SectionTaglinesCms>) => void;
   setLogoUrl: (url: string) => void;
@@ -291,6 +294,25 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
           recycleBin: {
             ...prev.recycleBin,
             projects: [{ deletedAt, item }, ...prev.recycleBin.projects],
+          },
+        };
+      });
+    },
+    [replaceData],
+  );
+
+  const deleteCertificate = useCallback(
+    (id: string) => {
+      replaceData((prev) => {
+        const item = prev.certificates.find((x) => x.id === id);
+        if (!item) return prev;
+        const deletedAt = new Date().toISOString();
+        return {
+          ...prev,
+          certificates: prev.certificates.filter((x) => x.id !== id),
+          recycleBin: {
+            ...prev.recycleBin,
+            certificates: [{ deletedAt, item }, ...prev.recycleBin.certificates],
           },
         };
       });
@@ -634,6 +656,37 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
     [replaceData],
   );
 
+  const restoreRecycleCertificate = useCallback(
+    (id: string) => {
+      replaceData((prev) => {
+        const entry = prev.recycleBin.certificates.find((e) => e.item.id === id);
+        if (!entry) return prev;
+        const rest = prev.recycleBin.certificates.filter((e) => e.item.id !== id);
+        const exists = prev.certificates.some((c) => c.id === id);
+        const certificates = exists ? prev.certificates : [...prev.certificates, entry.item];
+        return {
+          ...prev,
+          certificates,
+          recycleBin: { ...prev.recycleBin, certificates: rest },
+        };
+      });
+    },
+    [replaceData],
+  );
+
+  const purgeRecycleCertificate = useCallback(
+    (id: string) => {
+      replaceData((prev) => ({
+        ...prev,
+        recycleBin: {
+          ...prev.recycleBin,
+          certificates: prev.recycleBin.certificates.filter((e) => e.item.id !== id),
+        },
+      }));
+    },
+    [replaceData],
+  );
+
   const resetToDefaults = useCallback(async () => {
     try {
       await clearPortfolioBlobStore();
@@ -697,12 +750,15 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       setResumeFile,
       addContactMessage,
       deleteContactMessage,
+      deleteCertificate,
       restoreRecycleProject,
       purgeRecycleProject,
       restoreRecycleBlog,
       purgeRecycleBlog,
       restoreRecycleMessage,
       purgeRecycleMessage,
+      restoreRecycleCertificate,
+      purgeRecycleCertificate,
       resetToDefaults,
       updateSectionTaglines,
       setLogoUrl,
@@ -742,6 +798,7 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       resetToDefaults,
       updateSectionTaglines,
       setCertificates,
+      deleteCertificate,
       setLogoUrl,
       resetMarketingCopyToDefaults,
     ],

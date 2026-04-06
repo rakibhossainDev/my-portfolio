@@ -40,7 +40,7 @@ export function CertificateSection() {
         >
           <ul className="flex w-max gap-4 pb-2 sm:gap-6">
             {certificates.map((cert) => (
-              <li key={cert.id} className="w-[min(100vw-2.5rem,240px)] shrink-0 sm:w-[240px]">
+              <li key={cert.id} className="w-[min(100vw-2.5rem,350px)] h-[420px] sm:h-[450px] shrink-0 sm:w-[350px]">
                 <article className="h-full">
                   <CertificateCard certificate={cert} className="h-full" />
                 </article>

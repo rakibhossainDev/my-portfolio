@@ -84,42 +84,35 @@ export function CertificateCard({ certificate, className }: CertificateCardProps
   };
 
   return (
-    <GlassCard className={cn("group flex h-full flex-col overflow-hidden p-0", className)}>
-      {/* Certificate Image */}
-      <div className="relative">
-        <Link
-          href={`/certificates/${certificate.id}`}
-          className="relative block aspect-[4/5] overflow-hidden bg-slate-200/80"
-        >
-          <SafeImage
-            src={certificate.imageSrc}
-            alt={certificate.imageAlt}
-            fill
-            className="object-cover transition duration-500 group-hover:scale-[1.05]"
-            sizes="(max-width: 768px) 100vw, 33vw"
-          />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-900/20 opacity-0 transition group-hover:opacity-100" />
-        </Link>
-          
-          {/* View Button */}
-          <Link
-            href={`/certificates/${certificate.id}`}
-            className="btn-interactive absolute right-2 top-2 z-20 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/70 bg-white/60 text-slate-700 shadow-sm backdrop-blur-md transition hover:border-white hover:bg-white/80 sm:right-3 sm:top-3 sm:h-10 sm:w-10"
-            aria-label="View certificate"
-            title="View certificate"
-          >
-            <ZoomIcon />
-          </Link>
+    <Link href={`/certificates/${certificate.id}`} className="block">
+      <GlassCard
+        className={cn(
+          "group flex h-full flex-col overflow-hidden p-0 transition-shadow shadow-lg hover:shadow-xl",
+          className,
+        )}
+      >
+        {/* Certificate Image */}
+        <div className="relative flex-none">
+          <div className="relative block aspect-[4/3] overflow-hidden bg-slate-200/80">
+            <SafeImage
+              src={certificate.imageSrc}
+              alt={certificate.imageAlt}
+              fill
+              className="object-cover transition duration-500 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, 33vw"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-900/20 opacity-0 transition group-hover:opacity-100" />
+          </div>
         </div>
 
         {/* Certificate Info */}
-        <div className="relative z-10 flex flex-1 flex-col bg-white/30 p-3 sm:p-4">
-          <h3 className="line-clamp-2 text-sm font-semibold text-slate-900 sm:text-base">
+          <div className="relative z-10 flex flex-1 flex-col bg-white/30 p-3 sm:p-4">
+            <h3 className="text-sm font-semibold text-slate-900 sm:text-base truncate">
             {certificate.title}
           </h3>
-          <p className="mt-1 text-xs text-slate-600 sm:text-sm">
-            {certificate.organization}
-          </p>
+            <p className="mt-1 text-xs text-slate-600 sm:text-sm truncate">
+              {certificate.organization}
+            </p>
           <p className="mt-0.5 text-xs font-medium text-violet-600">
             {new Date(certificate.date).toLocaleDateString("en-US", {
               year: "numeric",
@@ -128,25 +121,38 @@ export function CertificateCard({ certificate, className }: CertificateCardProps
           </p>
 
           {/* Interaction Bar */}
-          <div className="mt-auto flex items-center justify-start gap-2 border-t border-white/50 pt-2 sm:pt-3">
-            <button
-              onClick={() => setIsLiked(!isLiked)}
-              className="btn-interactive inline-flex items-center gap-1 rounded-lg border border-red-200/50 bg-red-50/40 px-2.5 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50/60 hover:border-red-300"
-              title={isLiked ? "Unlike" : "Like"}
-            >
-              <LikeIcon filled={isLiked} />
-              <span className="hidden sm:inline">{isLiked ? "Liked" : "Like"}</span>
-            </button>
-            <button
-              onClick={handleShare}
-              className="btn-interactive inline-flex items-center gap-1 rounded-lg border border-violet-200/50 bg-violet-50/40 px-2.5 py-1 text-xs font-medium text-violet-600 transition hover:bg-violet-50/60 hover:border-violet-300"
-              title="Share certificate"
-            >
-              <ShareIcon />
-              <span className="hidden sm:inline">Share</span>
-            </button>
-          </div>
+            <div className="mt-auto flex items-center justify-between gap-2 border-t border-white/50 pt-2 sm:pt-3">
+              <div>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsLiked(!isLiked);
+                  }}
+                  className="btn-interactive inline-flex items-center gap-1 rounded-lg border border-red-200/50 bg-red-50/40 px-2.5 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50/60 hover:border-red-300"
+                  title={isLiked ? "Unlike" : "Like"}
+                >
+                  <LikeIcon filled={isLiked} />
+                  <span className="hidden sm:inline">{isLiked ? "Liked" : "Like"}</span>
+                </button>
+              </div>
+              <div>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleShare();
+                  }}
+                  className="btn-interactive inline-flex items-center gap-1 rounded-lg border border-violet-200/50 bg-violet-50/40 px-2.5 py-1 text-xs font-medium text-violet-600 transition hover:bg-violet-50/60 hover:border-violet-300"
+                  title="Share certificate"
+                >
+                  <ShareIcon />
+                  <span className="hidden sm:inline">Share</span>
+                </button>
+              </div>
+            </div>
         </div>
       </GlassCard>
+    </Link>
   );
 }

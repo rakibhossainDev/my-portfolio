@@ -144,6 +144,7 @@ export function AdminApp() {
     resetToDefaults,
     updateHero,
     setStats,
+    deleteCertificate,
     updateAbout,
     setSkills,
     setEducation,
@@ -158,6 +159,8 @@ export function AdminApp() {
     purgeRecycleBlog,
     restoreRecycleMessage,
     purgeRecycleMessage,
+    restoreRecycleCertificate,
+    purgeRecycleCertificate,
     sectionTaglines,
     updateSectionTaglines,
     resetMarketingCopyToDefaults,
@@ -176,6 +179,7 @@ export function AdminApp() {
   const [blogContentStr, setBlogContentStr] = useState("");
   const [editingSkill, setEditingSkill] = useState<SkillCms | null>(null);
   const [editingEdu, setEditingEdu] = useState<EducationCmsEntry | null>(null);
+  const [editingCert, setEditingCert] = useState<Certificate | null>(null);
 
   useEffect(() => {
     startTransition(() => {
@@ -291,6 +295,29 @@ export function AdminApp() {
       idx === -1 ? [...education, editingEdu] : education.map((x) => (x.id === editingEdu.id ? editingEdu : x));
     setEducation(next);
     setEditingEdu(null);
+  };
+
+  const openNewCert = () => {
+    const c = emptyCertificate();
+    setEditingCert(c);
+  };
+
+  const openEditCert = (c: Certificate) => {
+    setEditingCert({ ...c });
+  };
+
+  const saveCertificate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCert) return;
+    // Validation: title and organization required
+    if (!editingCert.title.trim() || !editingCert.organization.trim()) {
+      alert("Please provide a certificate title and organization.");
+      return;
+    }
+    const idx = data.certificates.findIndex((x) => x.id === editingCert.id);
+    const next = idx === -1 ? [...data.certificates, editingCert] : data.certificates.map((x) => (x.id === editingCert.id ? editingCert : x));
+    setCertificates(next);
+    setEditingCert(null);
   };
 
   const tabBtn = (id: Tab, label: string) => (
@@ -495,6 +522,46 @@ export function AdminApp() {
                         onClick={() => {
                           if (confirm("Permanently delete this project? This cannot be undone."))
                             purgeRecycleProject(e.item.id);
+                        }}
+                        className="rounded-lg border border-red-500/40 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-500/10"
+                      >
+                        Delete forever
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-zinc-200">Certificates</h3>
+            {recycleBin.certificates.length === 0 ? (
+              <p className="text-sm text-zinc-500">No deleted certificates.</p>
+            ) : (
+              <ul className="space-y-2">
+                {recycleBin.certificates?.map((e) => (
+                  <li
+                    key={e.item.id}
+                    className="flex flex-col gap-2 rounded-lg border border-white/10 bg-zinc-950/60 p-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-white">{e.item.title || "(untitled)"}</p>
+                      <p className="text-xs text-zinc-500">Deleted {new Date(e.deletedAt).toLocaleString()}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => restoreRecycleCertificate(e.item.id)}
+                        className="rounded-lg border border-emerald-500/40 px-3 py-1.5 text-xs font-medium text-emerald-300 hover:bg-emerald-500/10"
+                      >
+                        Recover
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm("Permanently delete this certificate? This cannot be undone."))
+                            purgeRecycleCertificate(e.item.id);
                         }}
                         className="rounded-lg border border-red-500/40 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-500/10"
                       >
@@ -730,44 +797,119 @@ export function AdminApp() {
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-semibold text-white">Certificates</h2>
-            <button
-              type="button"
-              onClick={() => {
-                const newCert = emptyCertificate();
-                setCertificates([...data.certificates, newCert]);
-              }}
-              className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500"
-            >
-              Add certificate
-            </button>
-          </div>
-          <ul className="space-y-2">
-            {data.certificates?.map((cert) => (
-              <li
-                key={cert.id}
-                className="flex flex-col gap-2 rounded-xl border border-white/10 bg-zinc-900/50 p-4 sm:flex-row sm:items-center sm:justify-between"
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={openNewCert}
+                className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500"
               >
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-white">{cert.title || "(untitled)"}</p>
-                  <p className="truncate text-xs text-zinc-500">
-                    {cert.organization} · {cert.date}
-                  </p>
+                Add certificate
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCertificates([]);
+                }}
+                className="rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300 hover:bg-white/5"
+              >
+                Clear all
+              </button>
+            </div>
+          </div>
+
+          {editingCert ? (
+            <form onSubmit={saveCertificate} className="rounded-lg border border-white/10 bg-zinc-950/50 p-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className={labelClass}>Certificate Name</label>
+                  <input
+                    className={inputClass}
+                    value={editingCert.title}
+                    onChange={(e) => setEditingCert({ ...editingCert, title: e.target.value })}
+                    placeholder="e.g. Advanced React Patterns"
+                    required
+                  />
                 </div>
-                <div className="flex shrink-0 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCertificates(data.certificates.filter((c) => c.id !== cert.id));
-                    }}
-                    className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/20"
-                  >
-                    Delete
-                  </button>
+                <div>
+                  <label className={labelClass}>Platform / Issuer</label>
+                  <input
+                    className={inputClass}
+                    value={editingCert.organization}
+                    onChange={(e) => setEditingCert({ ...editingCert, organization: e.target.value })}
+                    placeholder="e.g. Ostad, Udemy, Google"
+                    required
+                  />
                 </div>
-              </li>
-            ))}
-          </ul>
-          <p className="text-xs text-zinc-400">Full certificate editor coming soon in detailed edit mode</p>
+                <div>
+                  <label className={labelClass}>Photo / Badge URL</label>
+                  <input
+                    type="url"
+                    className={inputClass}
+                    value={editingCert.imageSrc}
+                    onChange={(e) => setEditingCert({ ...editingCert, imageSrc: e.target.value })}
+                    placeholder="https://example.com/cert.jpg"
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Issue Date</label>
+                  <input
+                    type="date"
+                    className={inputClass}
+                    value={editingCert.date}
+                    onChange={(e) => setEditingCert({ ...editingCert, date: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="mt-4 flex gap-2">
+                <button type="submit" className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white">
+                  Save certificate
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingCert(null)}
+                  className="rounded-lg border border-white/10 px-4 py-2 text-sm text-zinc-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <ul className="space-y-2">
+              {data.certificates?.map((cert) => (
+                <li
+                  key={cert.id}
+                  className="flex flex-col gap-2 rounded-xl border border-white/10 bg-zinc-900/50 p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-white">{cert.title || "(untitled)"}</p>
+                    <p className="truncate text-xs text-zinc-500">
+                      {cert.organization} · {cert.date}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openEditCert(cert)}
+                      className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-white/5"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm("Move this certificate to the Recycle Bin?")) deleteCertificate(cert.id);
+                      }}
+                      className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/20"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <p className="text-xs text-zinc-400">Full certificate editor available here.</p>
         </section>
       )}
 

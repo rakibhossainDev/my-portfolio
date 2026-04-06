@@ -1,6 +1,6 @@
 "use client";
 
-import { ProjectGrid } from "@/components/projects/project-grid";
+import { ProjectCard } from "@/components/cards/ProjectCard";
 import { HorizontalScrollHint } from "@/components/ui/horizontal-scroll-hint";
 import { usePreferences } from "@/components/preferences-provider";
 import { useSiteData } from "@/components/site-data-provider";
@@ -41,11 +41,20 @@ export function FeaturedProjectsSection() {
 
         <div className="mt-8 sm:mt-10">
           <HorizontalScrollHint
+            className="mt-5 sm:mt-6"
             hintLabel="Scroll sideways to see more projects"
             showScrollButtons
             scrollClassName="-mx-1 px-1 pb-1 sm:-mx-0 sm:px-0"
           >
-            <ProjectGrid projects={projects} layout="carousel" />
+            <ul className="flex w-max gap-4 pb-2 sm:gap-6">
+              {projects.map((project) => (
+                <li key={project.id} className="w-[min(100vw-2.5rem,300px)] shrink-0 sm:w-[300px]">
+                  <article className="h-full">
+                    <ProjectCard project={project} className="h-full" />
+                  </article>
+                </li>
+              ))}
+            </ul>
           </HorizontalScrollHint>
         </div>
 
