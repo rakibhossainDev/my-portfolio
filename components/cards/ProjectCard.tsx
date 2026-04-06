@@ -66,7 +66,8 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
   return (
     <GlassCard
       className={cn(
-        "relative group flex h-full flex-col overflow-hidden p-0 rounded-3xl shadow-lg transition-shadow hover:shadow-2xl",
+        // mobile-first fixed min-height so buttons remain visible; desktop reverts to natural height
+        "relative group flex h-full flex-col overflow-hidden p-0 rounded-3xl shadow-lg transition-shadow hover:shadow-2xl min-h-[480px] md:min-h-0",
         className
       )}
     >
@@ -125,8 +126,8 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
 
         <p className="mt-1 text-sm leading-relaxed text-slate-600 line-clamp-3 overflow-hidden">{project.description}</p>
 
-        <div className="mt-2 relative overflow-hidden whitespace-nowrap sm:flex-wrap sm:overflow-visible sm:mt-4">
-          <div className="flex gap-2">
+        <div className="mt-2 sm:mt-4">
+          <div className="flex gap-2 overflow-x-auto flex-nowrap pb-2 sm:overflow-visible sm:flex-wrap sm:pb-0">
             {project.tags.map((t) => (
               <span
                 key={t}
@@ -136,13 +137,14 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
               </span>
             ))}
           </div>
-          {/* Right-side fade to indicate overflow (hidden tags) */}
-          <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-white/50 to-transparent" />
         </div>
 
         {/* Buttons row: pinned to bottom, compact on mobile (icons only), full on md+ */}
         <div className="mt-auto w-full">
-          <div className="flex items-center justify-center gap-3 px-4 pb-4 pt-3 sm:px-6">
+          <div className="flex items-center justify-between gap-3 px-4 pb-4 pt-3 sm:px-6">
+            <div className="flex items-center gap-3">
+              {/* Keep top-left star accessible visually by leaving it in overlay; duplicate optional star area can go here if desired */}
+            </div>
             {project.liveUrl !== "#" && (
               <a
                 href={project.liveUrl}
