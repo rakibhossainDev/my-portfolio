@@ -123,35 +123,40 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
           </Link>
         </h3>
 
-        <p className="mt-2 text-sm leading-relaxed text-slate-600">{project.description}</p>
+        <p className="mt-1 text-sm leading-relaxed text-slate-600">{project.description}</p>
 
-        <div className="mt-3 flex flex-wrap gap-2 sm:mt-4">
-          {project.tags.map((t) => (
-            <span
-              key={t}
-              className="rounded-full border border-violet-200/80 bg-violet-50/80 px-2.5 py-0.5 text-xs font-medium text-violet-700 backdrop-blur-sm"
-            >
-              {t}
-            </span>
-          ))}
+        <div className="mt-2 relative overflow-hidden whitespace-nowrap sm:flex-wrap sm:overflow-visible sm:mt-4">
+          <div className="flex gap-2">
+            {project.tags.map((t) => (
+              <span
+                key={t}
+                className="flex-shrink-0 inline-block rounded-full border border-violet-200/80 bg-violet-50/80 px-2.5 py-0.5 text-xs font-medium text-violet-700 backdrop-blur-sm"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+          {/* Right-side fade to indicate overflow (hidden tags) */}
+          <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-white/50 to-transparent" />
         </div>
 
-        {/* Buttons row: centered single horizontal row, responsive (only Live Demo + Code) */}
-        <div className="mt-6 w-full">
-          <div className="flex items-center justify-center gap-3 px-4 pb-6 sm:px-6 flex-wrap sm:flex-nowrap">
+        {/* Buttons row: pinned to bottom, compact on mobile (icons only), full on md+ */}
+        <div className="mt-auto w-full">
+          <div className="flex items-center justify-center gap-3 px-4 pb-4 pt-3 sm:px-6">
             {project.liveUrl !== "#" && (
               <a
                 href={project.liveUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-11 px-3 sm:px-4 rounded-full inline-flex items-center justify-center gap-2 text-sm font-medium transition-all duration-300 hover:scale-105 active:scale-95 whitespace-nowrap bg-gradient-to-r from-blue-500 to-indigo-600 text-white"
-                title="View live demo"
+                title="Open live demo"
+                aria-label="Open live demo"
+                className="h-11 px-4 py-2 rounded-2xl inline-flex items-center justify-center gap-2 text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95 whitespace-nowrap bg-gradient-to-r from-violet-600 to-indigo-600 text-white border border-white/10"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
-                <span>Live Demo</span>
+                <span>Demo ↗</span>
               </a>
             )}
 
@@ -160,12 +165,13 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
                 href={project.codeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-11 px-3 sm:px-4 rounded-full inline-flex items-center justify-center gap-2 text-sm font-medium transition-all duration-300 hover:scale-105 active:scale-95 whitespace-nowrap bg-slate-900 text-white border border-slate-800/60 shadow-sm"
                 title="View source code"
+                aria-label="View source code"
+                className="h-11 px-4 py-2 rounded-2xl inline-flex items-center justify-center gap-2 text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95 whitespace-nowrap bg-slate-900 text-white border border-slate-800/60 shadow-sm"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
-                <GitHubIcon />
-                <span>Code</span>
+                <GitHubIcon className="h-4 w-4" />
+                <span>Code ↗</span>
               </a>
             )}
 
