@@ -10,8 +10,8 @@ export function StatsSection() {
   const bn = locale === "bn";
 
   return (
-    <section className="mx-auto max-w-6xl px-3 py-3 sm:px-6 sm:py-4 md:py-6">
-      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 md:gap-5">
+    <section className="mx-auto max-w-6xl px-3 py-6 sm:px-6 sm:py-8 md:py-9">
+      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5 md:gap-6">
         {stats.map((s) => (
           <li key={s.id}>
             <AnimatedStatCard

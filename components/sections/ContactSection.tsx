@@ -55,6 +55,8 @@ export function ContactSection() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Email</p>
                 <a
                   href={`mailto:${c.email}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="mt-1 inline-block text-sm font-medium text-violet-700 hover:underline"
                 >
                   {c.email}

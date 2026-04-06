@@ -1,5 +1,7 @@
 import type { BlogPost } from "@/data/blog";
 import { blogPosts } from "@/data/blog";
+import type { Certificate } from "@/data/certificates";
+import { certificates as staticCertificates, normalizeCertificate } from "@/data/certificates";
 import type { EducationEntry } from "@/data/education";
 import { education as staticEducation } from "@/data/education";
 import type { Project } from "@/data/projects";
@@ -141,6 +143,7 @@ export type SiteDataPayload = {
   education: EducationCmsEntry[];
   projects: Project[];
   blogs: BlogPost[];
+  certificates: Certificate[];
   assets: SiteAssets;
   messages: ContactMessage[];
   /** Present for all new saves; omitted in older localStorage rows until next save. */
@@ -151,6 +154,8 @@ export type SiteDataPayload = {
   social: SocialLinksCms;
   /** Advertisement entries */
   ads: AdEntry[];
+  /** Logo URL for dynamic branding */
+  logoUrl: string;
 };
 
 type LegacyV1Payload = {
@@ -286,12 +291,14 @@ export function getDefaultSiteData(): SiteDataPayload {
     education: defaultEducation(),
     projects: structuredClone(projects).map((p) => normalizeProject(p)),
     blogs: structuredClone(blogPosts),
+    certificates: structuredClone(staticCertificates),
     assets: defaultAssets(),
     messages: [],
     recycleBin: emptyRecycleBin(),
     sectionTaglines: defaultSectionTaglines(),
     social: defaultSocial(),
     ads: [],
+    logoUrl: "",
   };
 }
 
@@ -517,6 +524,9 @@ function buildPayloadFromCore(raw: Record<string, unknown>): SiteDataPayload | n
   const ads = Array.isArray(raw.ads) && raw.ads.every(isAdEntry)
     ? (raw.ads as AdEntry[])
     : [];
+  const certificates = Array.isArray(raw.certificates)
+    ? (raw.certificates as Certificate[]).map((c) => normalizeCertificate(c))
+    : structuredClone(staticCertificates);
 
   return {
     version: 3,
@@ -527,12 +537,14 @@ function buildPayloadFromCore(raw: Record<string, unknown>): SiteDataPayload | n
     education: raw.education as EducationCmsEntry[],
     projects: (raw.projects as Project[]).map((p) => normalizeProject(p)),
     blogs: raw.blogs as BlogPost[],
+    certificates,
     assets,
     messages,
     recycleBin: parseRecycleBin(raw.recycleBin),
     sectionTaglines,
     social: isSocialLinksCms(raw.social) ? raw.social : defaultSocial(),
     ads,
+    logoUrl: typeof raw.logoUrl === 'string' ? raw.logoUrl : "",
   };
 }
 
@@ -551,6 +563,8 @@ export function parseSiteDataPayload(raw: unknown): SiteDataPayload | null {
       assets: defaultAssets(),
       messages: [] as ContactMessage[],
       recycleBin: emptyRecycleBin(),
+      certificates: structuredClone(staticCertificates),
+      logoUrl: "",
     };
     return buildPayloadFromCore(upgraded);
   }

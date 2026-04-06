@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, startTransition, useState } from "react";
 import type { BlogPost } from "@/data/blog";
+import type { Certificate } from "@/data/certificates";
 import type { Project } from "@/data/projects";
 import {
   ADMIN_PASS,
@@ -21,8 +22,10 @@ type Tab =
   | "social"
   | "projects"
   | "blogs"
+  | "certificates"
   | "media"
   | "ads"
+  | "general"
   | "inbox"
   | "recycle";
 
@@ -95,6 +98,19 @@ const emptyEducation = (): EducationCmsEntry => ({
   detailBn: "",
 });
 
+const emptyCertificate = (): Certificate => ({
+  id: crypto.randomUUID(),
+  title: "",
+  titleBn: "",
+  organization: "",
+  organizationBn: "",
+  date: new Date().toISOString().slice(0, 10),
+  imageSrc: "/placeholder-certificate.svg",
+  imageAlt: "",
+  fullImageSrc: "",
+  verificationUrl: "",
+});
+
 const inputClass =
   "mt-1 w-full rounded-lg border border-white/10 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none ring-zinc-600 focus:ring-2";
 
@@ -113,6 +129,7 @@ export function AdminApp() {
     hydrated,
     projects,
     blogs,
+    certificates,
     hero,
     stats,
     about,
@@ -123,6 +140,7 @@ export function AdminApp() {
     deleteProject,
     upsertBlog,
     deleteBlog,
+    setCertificates,
     resetToDefaults,
     updateHero,
     setStats,
@@ -147,6 +165,7 @@ export function AdminApp() {
     updateSocial,
     ads,
     setAds,
+    setLogoUrl,
     updateAssets,
   } = useSiteData();
 
@@ -429,10 +448,12 @@ export function AdminApp() {
         {tabBtn("social", "Social")}
         {tabBtn("projects", "Projects")}
         {tabBtn("blogs", "Blog")}
+        {tabBtn("certificates", "Certs")}
         {tabBtn("media", "Media")}
         {tabBtn("ads", "Ads")}
+        {tabBtn("general", "Settings")}
         {tabBtn("inbox", "Inbox")}
-        {tabBtn("recycle", "Recycle bin")}
+        {tabBtn("recycle", "Recycle")}
       </div>
 
       {tab === "recycle" && (
@@ -450,7 +471,7 @@ export function AdminApp() {
               <p className="text-sm text-zinc-500">No deleted projects.</p>
             ) : (
               <ul className="space-y-2">
-                {recycleBin.projects.map((e) => (
+                {recycleBin.projects?.map((e) => (
                   <li
                     key={e.item.id}
                     className="flex flex-col gap-2 rounded-lg border border-white/10 bg-zinc-950/60 p-3 sm:flex-row sm:items-center sm:justify-between"
@@ -492,7 +513,7 @@ export function AdminApp() {
               <p className="text-sm text-zinc-500">No deleted posts.</p>
             ) : (
               <ul className="space-y-2">
-                {recycleBin.blogs.map((e) => (
+                {recycleBin.blogs?.map((e) => (
                   <li
                     key={e.item.id}
                     className="flex flex-col gap-2 rounded-lg border border-white/10 bg-zinc-950/60 p-3 sm:flex-row sm:items-center sm:justify-between"
@@ -534,7 +555,7 @@ export function AdminApp() {
               <p className="text-sm text-zinc-500">No deleted messages.</p>
             ) : (
               <ul className="space-y-2">
-                {recycleBin.messages.map((e) => (
+                {recycleBin.messages?.map((e) => (
                   <li
                     key={e.item.id}
                     className="flex flex-col gap-2 rounded-lg border border-white/10 bg-zinc-950/60 p-3 sm:flex-row sm:items-center sm:justify-between"
@@ -640,7 +661,7 @@ export function AdminApp() {
           </p>
 
           <div className="space-y-4">
-            {data.ads.map((ad, index) => (
+            {data.ads?.map((ad, index) => (
               <div key={ad.id} className="rounded-lg border border-white/10 bg-zinc-950/50 p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 space-y-3">
@@ -705,6 +726,84 @@ export function AdminApp() {
         </section>
       )}
 
+      {tab === "certificates" && (
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold text-white">Certificates</h2>
+            <button
+              type="button"
+              onClick={() => {
+                const newCert = emptyCertificate();
+                setCertificates([...data.certificates, newCert]);
+              }}
+              className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500"
+            >
+              Add certificate
+            </button>
+          </div>
+          <ul className="space-y-2">
+            {data.certificates?.map((cert) => (
+              <li
+                key={cert.id}
+                className="flex flex-col gap-2 rounded-xl border border-white/10 bg-zinc-900/50 p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-white">{cert.title || "(untitled)"}</p>
+                  <p className="truncate text-xs text-zinc-500">
+                    {cert.organization} · {cert.date}
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCertificates(data.certificates.filter((c) => c.id !== cert.id));
+                    }}
+                    className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/20"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-zinc-400">Full certificate editor coming soon in detailed edit mode</p>
+        </section>
+      )}
+
+      {tab === "general" && (
+        <section className="space-y-6 rounded-xl border border-white/10 bg-zinc-900/40 p-4 sm:p-5">
+          <div>
+            <h2 className="text-lg font-semibold text-white">General Settings</h2>
+            <p className="mt-1 text-sm text-zinc-400">Manage your site-wide configuration and settings</p>
+          </div>
+
+          <div className="max-w-xl">
+            <label className="block text-sm font-medium text-zinc-200">Logo URL</label>
+            <p className="mt-1 text-xs text-zinc-400">
+              Enter the URL of your logo image. It will be displayed in the navbar and footer.
+            </p>
+            <input
+              type="url"
+              placeholder="https://example.com/logo.png"
+              className={inputClass}
+              value={data.logoUrl || ""}
+              onChange={(e) => setLogoUrl(e.target.value)}
+            />
+            {data.logoUrl && (
+              <div className="mt-3 flex h-12 w-auto items-center gap-3 rounded-lg border border-white/10 bg-zinc-900/50 p-2">
+                <img
+                  src={data.logoUrl}
+                  alt="Logo preview"
+                  className="max-h-full max-w-[100px] object-contain"
+                />
+                <span className="text-xs text-zinc-400">Preview</span>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {tab === "inbox" && (
         <section className="space-y-4 rounded-xl border border-white/10 bg-zinc-900/40 p-5">
           <h2 className="text-lg font-semibold text-white">Contact inbox</h2>
@@ -715,7 +814,7 @@ export function AdminApp() {
             <p className="text-sm text-zinc-500">No messages yet.</p>
           ) : (
             <ul className="space-y-4">
-              {messages.map((m) => {
+              {messages?.map((m) => {
                 const d = new Date(m.createdAt);
                 const datePart = d.toLocaleDateString(undefined, {
                   weekday: "short",
@@ -834,7 +933,7 @@ export function AdminApp() {
           <h2 className="text-lg font-semibold text-white">Stats</h2>
           <p className="text-sm text-zinc-400">Three headline numbers (e.g. years, projects, Play Store apps).</p>
           <div className="space-y-6">
-            {stats.map((s, i) => (
+            {stats?.map((s, i) => (
               <div
                 key={s.id}
                 className="grid gap-3 rounded-lg border border-white/10 bg-zinc-950/50 p-4 sm:grid-cols-2 lg:grid-cols-5"
@@ -1174,7 +1273,7 @@ export function AdminApp() {
               </button>
             </div>
             <ul className="space-y-2">
-              {skills.map((sk) => (
+              {skills?.map((sk) => (
                 <li
                   key={sk.id}
                   className="flex flex-col gap-2 rounded-lg border border-white/10 bg-zinc-950/50 p-4 sm:flex-row sm:items-center sm:justify-between"
@@ -1220,7 +1319,7 @@ export function AdminApp() {
               </button>
             </div>
             <ul className="space-y-2">
-              {education.map((ed) => (
+              {education?.map((ed) => (
                 <li
                   key={ed.id}
                   className="flex flex-col gap-2 rounded-lg border border-white/10 bg-zinc-950/50 p-4 sm:flex-row sm:items-center sm:justify-between"
@@ -1371,7 +1470,7 @@ export function AdminApp() {
             </button>
           </div>
           <ul className="space-y-2">
-            {projects.map((p) => (
+            {projects?.map((p) => (
               <li
                 key={p.id}
                 className="flex flex-col gap-2 rounded-xl border border-white/10 bg-zinc-900/50 p-4 sm:flex-row sm:items-center sm:justify-between"
@@ -1417,7 +1516,7 @@ export function AdminApp() {
             </button>
           </div>
           <ul className="space-y-2">
-            {blogs.map((b) => (
+            {blogs?.map((b) => (
               <li
                 key={b.id}
                 className="flex flex-col gap-2 rounded-xl border border-white/10 bg-zinc-900/50 p-4 sm:flex-row sm:items-center sm:justify-between"

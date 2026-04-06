@@ -11,6 +11,7 @@ import {
   startTransition,
 } from "react";
 import type { BlogPost } from "@/data/blog";
+import type { Certificate } from "@/data/certificates";
 import type { Project } from "@/data/projects";
 import { site } from "@/data/site";
 import {
@@ -51,6 +52,7 @@ type SiteDataContextValue = {
   hydrated: boolean;
   projects: Project[];
   blogs: BlogPost[];
+  certificates: Certificate[];
   hero: HeroCms;
   stats: StatCms[];
   about: AboutCms;
@@ -61,6 +63,7 @@ type SiteDataContextValue = {
   sectionTaglines: SectionTaglinesCms;
   social: SocialLinksCms;
   ads: import("@/lib/site-data").AdEntry[];
+  logoUrl: string;
   /** Resolved display URLs (public path or blob URL). */
   resolvedHeroImageSrc: string;
   resolvedAboutImageSrc: string;
@@ -68,6 +71,7 @@ type SiteDataContextValue = {
   resolvedResumeDownloadName: string;
   setProjects: (list: Project[]) => void;
   setBlogs: (list: BlogPost[]) => void;
+  setCertificates: (list: Certificate[]) => void;
   upsertProject: (p: Project) => void;
   deleteProject: (id: string) => void;
   upsertBlog: (b: BlogPost) => void;
@@ -93,6 +97,7 @@ type SiteDataContextValue = {
   purgeRecycleMessage: (id: string) => void;
   resetToDefaults: () => Promise<void>;
   updateSectionTaglines: (patch: Partial<SectionTaglinesCms>) => void;
+  setLogoUrl: (url: string) => void;
   /** Restores hero, all section taglines, and About section leads to built-in defaults (does not touch projects, blog, skills, etc.). */
   resetMarketingCopyToDefaults: () => void;
 };
@@ -252,6 +257,14 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
 
   const setBlogs = useCallback((list: BlogPost[]) => {
     replaceData((prev) => ({ ...prev, blogs: list }));
+  }, [replaceData]);
+
+  const setCertificates = useCallback((list: Certificate[]) => {
+    replaceData((prev) => ({ ...prev, certificates: list }));
+  }, [replaceData]);
+
+  const setLogoUrl = useCallback((url: string) => {
+    replaceData((prev) => ({ ...prev, logoUrl: url }));
   }, [replaceData]);
 
   const upsertProject = useCallback(
@@ -648,6 +661,7 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       hydrated,
       projects: data.projects,
       blogs: data.blogs,
+      certificates: data.certificates,
       hero: data.hero,
       stats: data.stats,
       about: data.about,
@@ -658,12 +672,14 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       sectionTaglines: data.sectionTaglines,
       social: data.social,
       ads: data.ads,
+      logoUrl: data.logoUrl,
       resolvedHeroImageSrc,
       resolvedAboutImageSrc,
       resolvedResumeHref,
       resolvedResumeDownloadName,
       setProjects,
       setBlogs,
+      setCertificates,
       upsertProject,
       deleteProject,
       upsertBlog,
@@ -674,7 +690,9 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       setSkills,
       setEducation,
       updateSocial,
-      setAds,      updateAssets,      setHeroProfileFile,
+      setAds,
+      updateAssets,
+      setHeroProfileFile,
       setAboutProfileFile,
       setResumeFile,
       addContactMessage,
@@ -687,6 +705,7 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       purgeRecycleMessage,
       resetToDefaults,
       updateSectionTaglines,
+      setLogoUrl,
       resetMarketingCopyToDefaults,
     }),
     [
@@ -722,6 +741,8 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       purgeRecycleMessage,
       resetToDefaults,
       updateSectionTaglines,
+      setCertificates,
+      setLogoUrl,
       resetMarketingCopyToDefaults,
     ],
   );

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { SafeImage } from "@/components/SafeImage";
+import { GlassCard } from "@/components/cards/GlassCard";
 import {
   getProjectDisplayStars,
   isProjectStarred,
@@ -85,7 +86,7 @@ export function ProjectGrid({ projects, layout = "grid" }: ProjectGridProps) {
         </svg>
       </button>
 
-      <div className="carousel-container flex-1 grid grid-flow-col grid-rows-2 gap-4 overflow-x-auto pb-4 scrollbar-hide">
+      <div className="carousel-container flex-1 flex flex-wrap gap-4 overflow-x-auto pb-4 scrollbar-hide">
         {projects.map((project) => {
           const starState = starStates[project.id] || {
             isStarred: false,
@@ -97,31 +98,34 @@ export function ProjectGrid({ projects, layout = "grid" }: ProjectGridProps) {
             <div
               key={project.id}
               onClick={() => router.push(`/projects/${project.id}`)}
-              className="group flex min-w-[280px] max-w-[320px] flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-[0_24px_80px_-58px_rgba(15,23,42,0.7)] transition duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer"
+              className="group flex min-w-[min(100vw-2.5rem,300px)] sm:min-w-[300px] max-w-[320px] flex-col overflow-hidden cursor-pointer shrink-0"
             >
-              <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
-                <SafeImage
-                  src={project.imageSrc}
-                  alt={project.imageAlt || project.title}
-                  fill
-                  className="object-cover transition duration-500 group-hover:scale-105"
-                />
-              </div>
+              <GlassCard className="flex h-full flex-col overflow-hidden p-0">
+                <div className="relative aspect-[16/10] shrink-0 overflow-hidden border-b border-white/50 bg-slate-100/50">
+                  <SafeImage
+                    src={project.imageSrc}
+                    alt={project.imageAlt || project.title}
+                    fill
+                    className="object-cover transition duration-500 group-hover:scale-[1.02]"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                  />
+                </div>
 
-              <div className="flex flex-1 flex-col gap-4 bg-white p-5 sm:p-6">
-                <div className="space-y-2.5">
-                  <h3 className="line-clamp-2 text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
-                    {project.title}
-                  </h3>
-                  <p className="line-clamp-3 text-sm leading-relaxed text-slate-600 sm:text-base">
-                    {project.description}
-                  </p>
+                <div className="flex flex-1 flex-col p-4 sm:p-6">
+                  <div className="space-y-2">
+                    <h3 className="line-clamp-2 text-base font-semibold leading-snug text-slate-900 sm:text-lg">
+                      {project.title}
+                    </h3>
+                    <p className="line-clamp-3 text-sm leading-relaxed text-slate-600">
+                      {project.description}
+                    </p>
+                  </div>
                   {project.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-1">
+                    <div className="mt-3 flex flex-wrap gap-2">
                       {project.tags.slice(0, 3).map((tag, i) => (
                         <span
                           key={i}
-                          className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700"
+                          className="rounded-full border border-violet-200/80 bg-violet-50/80 px-2.5 py-0.5 text-xs font-medium text-violet-700 backdrop-blur-sm"
                         >
                           {tag}
                         </span>
@@ -130,32 +134,26 @@ export function ProjectGrid({ projects, layout = "grid" }: ProjectGridProps) {
                   )}
                 </div>
 
-                <div className="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-4 sm:pt-5">
-                  <div className="flex flex-wrap gap-3">
-                    {project.liveUrl !== "#" && (
-                      <a
-                        href={project.liveUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-2 rounded-full bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
-                      >
-                        <span>Demo</span>
-                        <span aria-hidden="true">↗</span>
-                      </a>
-                    )}
-                    {project.codeUrl !== "#" && (
-                      <a
-                        href={project.codeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-                      >
-                        <span>Code</span>
-                        <span aria-hidden="true">↗</span>
-                      </a>
-                    )}
+                <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/50 pt-3 sm:mt-4 sm:pt-4">
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 text-sm font-medium">
+                    <a
+                      href={project.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="btn-interactive text-blue-600 hover:text-blue-700"
+                    >
+                      Live Demo
+                    </a>
+                    <a
+                      href={project.codeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="btn-interactive text-violet-600 hover:text-violet-700"
+                    >
+                      Code
+                    </a>
                   </div>
                   <button
                     onClick={(e) => {
@@ -163,20 +161,20 @@ export function ProjectGrid({ projects, layout = "grid" }: ProjectGridProps) {
                       e.stopPropagation();
                       handleStar(project.id);
                     }}
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 transition hover:text-slate-900"
+                    className="btn-interactive shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900"
                   >
                     <svg
-                      className={`h-4 w-4 fill-current transition ${
+                      className={`h-3.5 w-3.5 fill-current transition ${
                         isStarred ? "text-amber-400" : "text-slate-400"
                       }`}
                       viewBox="0 0 24 24"
                     >
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                     </svg>
-                    <span>{displayStars} stars</span>
+                    <span>{displayStars}</span>
                   </button>
                 </div>
-              </div>
+              </GlassCard>
             </div>
           );
         })}
@@ -211,88 +209,85 @@ export function ProjectGrid({ projects, layout = "grid" }: ProjectGridProps) {
           <div
             key={project.id}
             onClick={() => router.push(`/projects/${project.id}`)}
-            className={`group flex flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-[0_24px_80px_-58px_rgba(15,23,42,0.7)] transition duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer ${
+            className={`group flex flex-col overflow-hidden cursor-pointer ${
               projectCount <= 2 ? "max-w-sm" : ""
             }`}
           >
-            <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
-              <SafeImage
-                src={project.imageSrc}
-                alt={project.imageAlt || project.title}
-                fill
-                className="object-cover transition duration-500 group-hover:scale-105"
-              />
-            </div>
+            <GlassCard className="flex h-full flex-col overflow-hidden p-0">
+              <div className="relative aspect-[16/10] shrink-0 overflow-hidden border-b border-white/50 bg-slate-100/50">
+                <SafeImage
+                  src={project.imageSrc}
+                  alt={project.imageAlt || project.title}
+                  fill
+                  className="object-cover transition duration-500 group-hover:scale-[1.02]"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                />
+              </div>
 
-            <div className="flex flex-1 flex-col gap-4 bg-white p-5 sm:p-6">
-              <div className="space-y-2.5">
-                <h3 className="line-clamp-2 text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
-                  {project.title}
-                </h3>
-                <p className="line-clamp-3 text-sm leading-relaxed text-slate-600 sm:text-base">
-                  {project.description}
-                </p>
+              <div className="flex flex-1 flex-col p-4 sm:p-6">
+                <div className="space-y-2">
+                  <h3 className="line-clamp-2 text-base font-semibold leading-snug text-slate-900 sm:text-lg">
+                    {project.title}
+                  </h3>
+                  <p className="line-clamp-3 text-sm leading-relaxed text-slate-600">
+                    {project.description}
+                  </p>
+                </div>
                 {project.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-1">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {project.tags.slice(0, 3).map((tag, i) => (
                       <span
                         key={i}
-                        className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700"
+                        className="rounded-full border border-violet-200/80 bg-violet-50/80 px-2.5 py-0.5 text-xs font-medium text-violet-700 backdrop-blur-sm"
                       >
                         {tag}
                       </span>
                     ))}
                   </div>
                 )}
-              </div>
 
-              <div className="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-4 sm:pt-5">
-                <div className="flex flex-wrap gap-3">
-                  {project.liveUrl !== "#" && (
+                <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/50 pt-3 sm:mt-4 sm:pt-4">
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 text-sm font-medium">
                     <a
                       href={project.liveUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-2 rounded-full bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
+                      className="btn-interactive text-blue-600 hover:text-blue-700"
                     >
-                      <span>Demo</span>
-                      <span aria-hidden="true">↗</span>
+                      Live Demo
                     </a>
-                  )}
-                  {project.codeUrl !== "#" && (
                     <a
                       href={project.codeUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                      className="btn-interactive text-violet-600 hover:text-violet-700"
                     >
-                      <span>Code</span>
-                      <span aria-hidden="true">↗</span>
+                      Code
                     </a>
-                  )}
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleStar(project.id);
-                  }}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 transition hover:text-slate-900"
-                >
-                  <svg
-                    className={`h-4 w-4 fill-current transition ${
-                      isStarred ? "text-amber-400" : "text-slate-400"
-                    }`}
-                    viewBox="0 0 24 24"
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleStar(project.id);
+                    }}
+                    className="btn-interactive shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900"
                   >
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
-                  <span>{displayStars} stars</span>
-                </button>
+                    <svg
+                      className={`h-3.5 w-3.5 fill-current transition ${
+                        isStarred ? "text-amber-400" : "text-slate-400"
+                      }`}
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                    <span>{displayStars}</span>
+                  </button>
+                </div>
               </div>
-            </div>
+            </GlassCard>
           </div>
         );
       })}

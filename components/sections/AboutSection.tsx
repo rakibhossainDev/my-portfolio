@@ -202,6 +202,8 @@ export function AboutSection() {
                   </a>
                   <a
                     href={`mailto:${a.email}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="btn-interactive flex h-10 w-10 items-center justify-center rounded-xl border border-white/70 bg-white/50 text-slate-700 shadow-sm backdrop-blur-md hover:border-violet-300/60 hover:text-violet-700"
                     aria-label="Email"
                   >

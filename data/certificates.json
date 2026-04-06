@@ -1,0 +1,24 @@
+[
+  {
+    "id": "cert-1",
+    "title": "App Development with Flutter",
+    "titleBn": "ফ্লাটার দিয়ে অ্যাপ ডেভেলপমেন্ট",
+    "organization": "Ostad",
+    "organizationBn": "উস্তাদ",
+    "date": "2023-06-15",
+    "imageSrc": "/placeholder-certificate.svg",
+    "imageAlt": "Flutter App Development Certificate",
+    "verificationUrl": "#"
+  },
+  {
+    "id": "cert-2",
+    "title": "Advanced Firebase Development",
+    "titleBn": "ফায়ারবেস ডেভেলপমেন্ট",
+    "organization": "Google Cloud Training",
+    "organizationBn": "গুগল ক্লাউড",
+    "date": "2023-09-20",
+    "imageSrc": "/placeholder-certificate.svg",
+    "imageAlt": "Firebase Development Certificate",
+    "verificationUrl": "#"
+  }
+]
