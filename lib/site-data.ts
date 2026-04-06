@@ -194,10 +194,11 @@ function defaultStats(): StatCms[] {
       labelBn: "সম্পন্ন প্রকল্প",
     },
     {
+    {
       id: "s3",
-      value: "",
-      suffix: "",
-      labelEn: "50+ Apps Published on Play Store",
+      value: "50",
+      suffix: "+",
+      labelEn: "Apps Published on Play Store",
       labelBn: "প্লে স্টোরে ৫০+ অ্যাপ প্রকাশিত",
     },
   ];
