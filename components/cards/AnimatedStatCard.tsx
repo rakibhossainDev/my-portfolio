@@ -66,10 +66,10 @@ export function AnimatedStatCard({
     <div ref={ref}>
       <GlassCard className={cn("p-4 text-center sm:p-5 md:p-6", className)}>
       <p className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-        <span className="bg-gradient-to-r from-violet-600 to-blue-600 bg-clip-text text-transparent tabular-nums">
+        <span className="bg-gradient-to-r from-violet-600 to-blue-600 bg-clip-text text-transparent tabular-nums font-extrabold">
           {showNumber}
         </span>
-        <span className="text-slate-800">{suffix}</span>
+        <span className="text-slate-800 font-bold">{suffix}</span>
       </p>
       <p className="mt-2 text-balance text-xs font-medium leading-snug text-slate-600 sm:text-sm">{label}</p>
       </GlassCard>

@@ -194,7 +194,6 @@ function defaultStats(): StatCms[] {
       labelBn: "সম্পন্ন প্রকল্প",
     },
     {
-    {
       id: "s3",
       value: "50",
       suffix: "+",
