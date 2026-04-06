@@ -6,7 +6,10 @@
 const PROJECT_STARS_KEY = "rh-project-stars-v1";
 const BLOG_VIEWS_KEY = "rh-blog-views-v1";
 const BLOG_LOVE_KEY = "rh-blog-love-v1";
+const BLOG_REACTIONS_KEY = "rh-blog-reactions-v2";
 const SESSION_VIEW_PREFIX = "rh-blog-viewed-session:";
+
+export type ReactionType = "like" | "celebrate" | "support" | "love" | "insightful" | "funny";
 
 export const ENGAGEMENT_CHANGED_EVENT = "rh-engagement-changed";
 
@@ -122,4 +125,45 @@ export function toggleBlogLove(slug: string): boolean {
 /** Per-device reaction count (0 or 1) for display next to Love. */
 export function getBlogLoveCountForDevice(slug: string): number {
   return isBlogLoved(slug) ? 1 : 0;
+}
+
+/** Multi-reaction system */
+function readBlogReactionsMap(): Record<string, Record<ReactionType, boolean>> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(BLOG_REACTIONS_KEY);
+    if (!raw) return {};
+    const v = JSON.parse(raw) as unknown;
+    if (!v || typeof v !== "object") return {};
+    return v as Record<string, Record<ReactionType, boolean>>;
+  } catch {
+    return {};
+  }
+}
+
+function writeBlogReactionsMap(map: Record<string, Record<ReactionType, boolean>>) {
+  localStorage.setItem(BLOG_REACTIONS_KEY, JSON.stringify(map));
+  notify();
+}
+
+export function getUserReaction(slug: string): ReactionType | null {
+  const map = readBlogReactionsMap();
+  const reactions = map[slug];
+  if (!reactions) return null;
+  for (const type of ["like", "celebrate", "support", "love", "insightful", "funny"] as ReactionType[]) {
+    if (reactions[type]) return type;
+  }
+  return null;
+}
+
+export function setUserReaction(slug: string, reactionType: ReactionType | null): ReactionType | null {
+  const map = readBlogReactionsMap();
+  if (!map[slug]) map[slug] = {} as Record<ReactionType, boolean>;
+  
+  for (const type of ["like", "celebrate", "support", "love", "insightful", "funny"] as ReactionType[]) {
+    map[slug][type] = type === reactionType;
+  }
+  
+  writeBlogReactionsMap(map);
+  return reactionType;
 }

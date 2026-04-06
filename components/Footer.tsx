@@ -14,8 +14,6 @@ const navLinks = [
   { href: "/#contact", label: "Contact" },
 ] as const;
 
-const connect = site.connect;
-
 type SocialBrand =
   | "youtube"
   | "discord"
@@ -147,7 +145,7 @@ function GithubIcon() {
 
 export function Footer() {
   const { locale } = usePreferences();
-  const { resolvedResumeHref, resolvedResumeDownloadName, sectionTaglines } = useSiteData();
+  const { resolvedResumeHref, resolvedResumeDownloadName, sectionTaglines, social } = useSiteData();
   const bn = locale === "bn";
   const footerBlurb = bn ? sectionTaglines.footerTaglineBn : sectionTaglines.footerTaglineEn;
 
@@ -194,38 +192,38 @@ export function Footer() {
           </p>
           <p className="mt-1 text-center text-xs text-slate-500 sm:text-sm">@rakibhossainDev</p>
           <div className="mt-3 flex max-w-2xl flex-wrap items-center justify-center gap-2 sm:mt-4 sm:gap-2.5 lg:mx-auto">
-            <SocialButton href={connect.youtube} label="YouTube @rakibhossainDev" brand="youtube">
+            <SocialButton href={social.youtube} label="YouTube @rakibhossainDev" brand="youtube">
               <YoutubeIcon />
             </SocialButton>
-            <SocialButton href={connect.discord} label="Discord @rakibhossainDev" brand="discord">
+            <SocialButton href={social.discord} label="Discord @rakibhossainDev" brand="discord">
               <DiscordIcon />
             </SocialButton>
-            <SocialButton href={connect.telegram} label="Telegram @rakibhossainDev" brand="telegram">
+            <SocialButton href={social.telegram} label="Telegram @rakibhossainDev" brand="telegram">
               <TelegramIcon />
             </SocialButton>
-            <SocialButton href={connect.whatsapp} label="WhatsApp +8801575809072" brand="whatsapp">
+            <SocialButton href={social.whatsapp} label="WhatsApp +8801575809072" brand="whatsapp">
               <WhatsappIcon />
             </SocialButton>
-            <SocialButton href={connect.linkedin} label="LinkedIn @rakibhossainDev" brand="linkedin">
+            <SocialButton href={social.linkedin} label="LinkedIn @rakibhossainDev" brand="linkedin">
               <LinkedinIcon />
             </SocialButton>
-            <SocialButton href={connect.x} label="X @rakibhossainDev" brand="x">
+            <SocialButton href={social.x} label="X @rakibhossainDev" brand="x">
               <XIcon />
             </SocialButton>
-            <SocialButton href={connect.instagram} label="Instagram @rakibhossainDev" brand="instagram">
+            <SocialButton href={social.instagram} label="Instagram @rakibhossainDev" brand="instagram">
               <InstagramIcon />
             </SocialButton>
-            <SocialButton href={connect.facebook} label="Facebook @rakibhossainDev" brand="facebook">
+            <SocialButton href={social.facebook} label="Facebook @rakibhossainDev" brand="facebook">
               <FacebookIcon />
             </SocialButton>
-            <SocialButton href={connect.github} label="GitHub @rakibhossainDev" brand="github">
+            <SocialButton href={social.github} label="GitHub @rakibhossainDev" brand="github">
               <GithubIcon />
             </SocialButton>
           </div>
         </div>
 
         <p className="mt-8 text-center text-xs text-slate-500 sm:mt-10 sm:text-sm">
-          Copyright 2026 MD RAKIB HOSSAIN. All Rights Reserved
+          © 2026 MD RAKIB HOSSAIN. All Rights Reserved
         </p>
       </div>
     </footer>

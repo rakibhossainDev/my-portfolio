@@ -39,6 +39,7 @@ import {
   type SiteDataPayload,
   type SiteRecycleBin,
   type SkillCms,
+  type SocialLinksCms,
   type StatCms,
 } from "@/lib/site-data";
 
@@ -58,6 +59,8 @@ type SiteDataContextValue = {
   messages: ContactMessage[];
   recycleBin: SiteRecycleBin;
   sectionTaglines: SectionTaglinesCms;
+  social: SocialLinksCms;
+  ads: import("@/lib/site-data").AdEntry[];
   /** Resolved display URLs (public path or blob URL). */
   resolvedHeroImageSrc: string;
   resolvedAboutImageSrc: string;
@@ -74,6 +77,9 @@ type SiteDataContextValue = {
   updateAbout: (patch: Partial<AboutCms>) => void;
   setSkills: (skills: SkillCms[]) => void;
   setEducation: (education: EducationCmsEntry[]) => void;
+  updateSocial: (patch: Partial<SocialLinksCms>) => void;
+  setAds: (ads: import("@/lib/site-data").AdEntry[]) => void;
+  updateAssets: (patch: Partial<import("@/lib/site-data").SiteAssets>) => void;
   setHeroProfileFile: (file: File | null) => Promise<void>;
   setAboutProfileFile: (file: File | null) => Promise<void>;
   setResumeFile: (file: File | null) => Promise<void>;
@@ -384,6 +390,27 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
     [replaceData],
   );
 
+  const updateSocial = useCallback(
+    (patch: Partial<SocialLinksCms>) => {
+      replaceData((prev) => ({ ...prev, social: { ...prev.social, ...patch } }));
+    },
+    [replaceData],
+  );
+
+  const setAds = useCallback(
+    (ads: import("@/lib/site-data").AdEntry[]) => {
+      replaceData((prev) => ({ ...prev, ads }));
+    },
+    [replaceData],
+  );
+
+  const updateAssets = useCallback(
+    (patch: Partial<import("@/lib/site-data").SiteAssets>) => {
+      replaceData((prev) => ({ ...prev, assets: { ...prev.assets, ...patch } }));
+    },
+    [replaceData],
+  );
+
   const setHeroProfileFile = useCallback(
     async (file: File | null) => {
       const prevKey = dataRef.current.assets.heroImageKey;
@@ -629,6 +656,8 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       messages: data.messages,
       recycleBin: data.recycleBin,
       sectionTaglines: data.sectionTaglines,
+      social: data.social,
+      ads: data.ads,
       resolvedHeroImageSrc,
       resolvedAboutImageSrc,
       resolvedResumeHref,
@@ -644,7 +673,8 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       updateAbout,
       setSkills,
       setEducation,
-      setHeroProfileFile,
+      updateSocial,
+      setAds,      updateAssets,      setHeroProfileFile,
       setAboutProfileFile,
       setResumeFile,
       addContactMessage,
@@ -677,6 +707,8 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       updateAbout,
       setSkills,
       setEducation,
+      updateSocial,
+      setAds,
       setHeroProfileFile,
       setAboutProfileFile,
       setResumeFile,

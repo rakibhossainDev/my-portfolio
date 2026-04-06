@@ -7,7 +7,7 @@
   --accent-to: #2563eb;
   --glass-border: rgba(255, 255, 255, 0.65);
   --glass-bg: rgba(255, 255, 255, 0.45);
-  --font-ui-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-ui-sans: var(--font-hind-siliguri), var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Bengali UI: Hind Siliguri when locale is BN (see `preferences-provider.tsx`). */
@@ -30,6 +30,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-ui-sans);
+  font-size: 18px; /* Increased from 16px for better readability */
 }
 
 /* Premium mesh-style page backdrop */
@@ -46,7 +47,7 @@ body {
 
 /* Case-study / blog markdown without @tailwindcss/typography */
 .markdown-detail {
-  font-size: 0.9375rem;
+  font-size: 1.0625rem; /* Increased from 0.9375rem (15px → 17px) */
   line-height: 1.75;
   color: #334155;
 }
@@ -64,13 +65,13 @@ body {
   scroll-margin-top: 6rem;
 }
 .markdown-detail h1 {
-  font-size: 1.5rem;
+  font-size: 1.625rem; /* Increased from 1.5rem (24px → 26px) */
 }
 .markdown-detail h2 {
-  font-size: 1.25rem;
+  font-size: 1.375rem; /* Increased from 1.25rem (20px → 22px) */
 }
 .markdown-detail h3 {
-  font-size: 1.1rem;
+  font-size: 1.225rem; /* Increased from 1.1rem (17.6px → 19.6px) */
 }
 .markdown-detail p {
   margin: 0 0 1rem;

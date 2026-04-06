@@ -1,16 +1,24 @@
 "use client";
 
-import { ProjectCard } from "@/components/cards/ProjectCard";
+import { ProjectGrid } from "@/components/projects/project-grid";
 import { HorizontalScrollHint } from "@/components/ui/horizontal-scroll-hint";
 import { usePreferences } from "@/components/preferences-provider";
 import { useSiteData } from "@/components/site-data-provider";
 import { site } from "@/data/site";
 import { homeUiBn } from "@/data/translations";
+import { useState, useEffect } from "react";
 
 export function FeaturedProjectsSection() {
   const { locale } = usePreferences();
   const { projects, sectionTaglines } = useSiteData();
-  const bn = locale === "bn";
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Only render with actual locale after hydration to prevent mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const bn = isMounted ? locale === "bn" : false;
 
   const heading = bn ? homeUiBn.featuredHeading : "Featured Projects";
   const sub = bn ? sectionTaglines.projectsSubBn : sectionTaglines.projectsSubEn;
@@ -21,7 +29,7 @@ export function FeaturedProjectsSection() {
       id="projects"
       className="scroll-mt-24 py-6 sm:py-8 md:py-9"
     >
-      <div className="mx-auto max-w-6xl px-3 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
         <header className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
@@ -31,25 +39,17 @@ export function FeaturedProjectsSection() {
           </div>
         </header>
 
-        <HorizontalScrollHint
-          className="mt-5 sm:mt-6"
-          hintLabel="Scroll sideways to see more projects"
-          showScrollButtons
-          scrollClassName="-mx-1 px-1 pb-1 sm:-mx-0 sm:px-0"
-        >
-          <ul
-            className="grid w-max grid-flow-col grid-rows-2 gap-3 sm:gap-5 md:gap-6"
-            style={{ gridAutoColumns: "minmax(min(260px, 82vw), 340px)" }}
+        <div className="mt-8 sm:mt-10">
+          <HorizontalScrollHint
+            hintLabel="Scroll sideways to see more projects"
+            showScrollButtons
+            scrollClassName="-mx-1 px-1 pb-1 sm:-mx-0 sm:px-0"
           >
-            {projects.map((p) => (
-              <li key={p.id} className="min-h-0">
-                <ProjectCard project={p} className="h-full" />
-              </li>
-            ))}
-          </ul>
-        </HorizontalScrollHint>
+            <ProjectGrid projects={projects} layout="carousel" />
+          </HorizontalScrollHint>
+        </div>
 
-        <div className="mt-6 flex justify-center sm:mt-8">
+        <div className="mt-8 flex justify-center sm:mt-10">
           <a
             href={site.social.github}
             target="_blank"

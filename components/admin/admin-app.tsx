@@ -18,9 +18,11 @@ type Tab =
   | "stats"
   | "taglines"
   | "about"
+  | "social"
   | "projects"
   | "blogs"
   | "media"
+  | "ads"
   | "inbox"
   | "recycle";
 
@@ -36,6 +38,12 @@ function parseContentBlocks(s: string): string[] {
     .split(/\n\n+/)
     .map((p) => p.trim())
     .filter(Boolean);
+}
+
+/** Generate a clean short link for sharing */
+function generateShortLink(slug: string): string {
+  if (!slug) return "";
+  return `${typeof window !== "undefined" ? window.location.origin : ""}/blog/${slug}`;
 }
 
 const emptyProject = (): Project => ({
@@ -64,6 +72,9 @@ const emptyBlog = (): BlogPost => ({
   imageSrc: "/placeholder-blog.svg",
   imageAlt: "",
   content: [""],
+  category: "",
+  categoryBn: "",
+  shortLink: "",
 });
 
 const emptySkill = (): SkillCms => ({
@@ -99,6 +110,7 @@ export function AdminApp() {
 
   const {
     data,
+    hydrated,
     projects,
     blogs,
     hero,
@@ -131,6 +143,11 @@ export function AdminApp() {
     sectionTaglines,
     updateSectionTaglines,
     resetMarketingCopyToDefaults,
+    social,
+    updateSocial,
+    ads,
+    setAds,
+    updateAssets,
   } = useSiteData();
 
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -221,6 +238,7 @@ export function AdminApp() {
     const blocks = parseContentBlocks(blogContentStr);
     const slug =
       editingBlog.slug.trim() || slugify(editingBlog.title) || `post-${editingBlog.id.slice(0, 8)}`;
+    const shortLink = editingBlog.shortLink || generateShortLink(slug);
     const b: BlogPost = {
       ...editingBlog,
       slug,
@@ -228,6 +246,9 @@ export function AdminApp() {
       imageAlt: editingBlog.imageAlt || editingBlog.title,
       titleBn: editingBlog.titleBn?.trim() || editingBlog.title,
       excerptBn: editingBlog.excerptBn?.trim() || editingBlog.excerpt,
+      category: editingBlog.category?.trim() || "",
+      categoryBn: editingBlog.categoryBn?.trim() || "",
+      shortLink,
     };
     upsertBlog(b);
     setEditingBlog(null);
@@ -266,7 +287,7 @@ export function AdminApp() {
     </button>
   );
 
-  if (!ready) {
+  if (!ready || !hydrated) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center text-sm text-zinc-500">
         Loading…
@@ -276,43 +297,69 @@ export function AdminApp() {
 
   if (!authed) {
     return (
-      <div className="mx-auto max-w-md">
-        <h1 className="text-2xl font-semibold tracking-tight text-white">Admin login</h1>
-        <p className="mt-1 text-sm text-zinc-400">Sign in to manage site content (saved in this browser).</p>
-        <form onSubmit={login} className="mt-8 space-y-4">
-          <div>
-            <label className={labelClass} htmlFor="adm-user">
-              Username
-            </label>
-            <input
-              id="adm-user"
-              autoComplete="username"
-              className={inputClass}
-              value={user}
-              onChange={(e) => setUser(e.target.value)}
-            />
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-4">
+        <div className="w-full max-w-md">
+          <div className="rounded-2xl border border-white/10 bg-zinc-900/80 shadow-2xl shadow-black/50 backdrop-blur-xl">
+            <div className="p-8">
+              <div className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-blue-600 shadow-lg">
+                  <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <h1 className="text-2xl font-bold tracking-tight text-white">Admin Access</h1>
+                <p className="mt-2 text-sm text-zinc-400">Sign in to manage your portfolio content</p>
+              </div>
+
+              <form onSubmit={login} className="mt-8 space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300" htmlFor="adm-user">
+                    Username
+                  </label>
+                  <input
+                    id="adm-user"
+                    autoComplete="username"
+                    className="mt-2 block w-full rounded-lg border border-white/10 bg-zinc-800/50 px-3 py-3 text-sm text-white placeholder-zinc-500 outline-none ring-zinc-600 focus:ring-2 focus:ring-violet-500"
+                    placeholder="Enter your username"
+                    value={user}
+                    onChange={(e) => setUser(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300" htmlFor="adm-pass">
+                    Password
+                  </label>
+                  <input
+                    id="adm-pass"
+                    type="password"
+                    autoComplete="current-password"
+                    className="mt-2 block w-full rounded-lg border border-white/10 bg-zinc-800/50 px-3 py-3 text-sm text-white placeholder-zinc-500 outline-none ring-zinc-600 focus:ring-2 focus:ring-violet-500"
+                    placeholder="Enter your password"
+                    value={pass}
+                    onChange={(e) => setPass(e.target.value)}
+                  />
+                </div>
+                {loginError && (
+                  <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3">
+                    <p className="text-sm text-red-400">{loginError}</p>
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  className="w-full rounded-lg bg-gradient-to-r from-violet-600 to-blue-600 py-3 text-sm font-semibold text-white shadow-lg hover:from-violet-500 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-900 transition-all duration-200"
+                >
+                  Sign In
+                </button>
+              </form>
+
+              <div className="mt-6 text-center">
+                <p className="text-xs text-zinc-500">
+                  Content is stored locally in your browser
+                </p>
+              </div>
+            </div>
           </div>
-          <div>
-            <label className={labelClass} htmlFor="adm-pass">
-              Password
-            </label>
-            <input
-              id="adm-pass"
-              type="password"
-              autoComplete="current-password"
-              className={inputClass}
-              value={pass}
-              onChange={(e) => setPass(e.target.value)}
-            />
-          </div>
-          {loginError && <p className="text-sm text-red-400">{loginError}</p>}
-          <button
-            type="submit"
-            className="w-full rounded-xl bg-violet-600 py-2.5 text-sm font-semibold text-white hover:bg-violet-500"
-          >
-            Sign in
-          </button>
-        </form>
+        </div>
       </div>
     );
   }
@@ -379,9 +426,11 @@ export function AdminApp() {
         {tabBtn("stats", "Stats")}
         {tabBtn("taglines", "Taglines")}
         {tabBtn("about", "About")}
+        {tabBtn("social", "Social")}
         {tabBtn("projects", "Projects")}
         {tabBtn("blogs", "Blog")}
         {tabBtn("media", "Media")}
+        {tabBtn("ads", "Ads")}
         {tabBtn("inbox", "Inbox")}
         {tabBtn("recycle", "Recycle bin")}
       </div>
@@ -528,83 +577,130 @@ export function AdminApp() {
         <section className="space-y-6 rounded-xl border border-white/10 bg-zinc-900/40 p-4 sm:p-5">
           <h2 className="text-lg font-semibold text-white">Images & resume</h2>
           <p className="text-sm text-zinc-400">
-            Files are stored in this browser (IndexedDB). Hero defaults to <code className="text-zinc-300">/profile.jpg</code>{" "}
-            when cleared.
+            Enter direct URLs for images and resume. These will be used instead of uploaded files.
           </p>
           <div className="grid gap-6 md:grid-cols-2">
             <div className="rounded-lg border border-white/10 bg-zinc-950/50 p-4">
-              <h3 className="text-sm font-semibold text-white">Hero profile image</h3>
-              <p className="mt-1 text-xs text-zinc-500">PNG, JPG, WebP, etc.</p>
+              <h3 className="text-sm font-semibold text-white">Hero profile image URL</h3>
+              <p className="mt-1 text-xs text-zinc-500">Direct link to profile image</p>
               <input
-                type="file"
-                accept="image/*"
-                className="mt-3 block w-full text-sm text-zinc-300 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-600 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white"
-                onChange={async (e) => {
-                  const f = e.target.files?.[0];
-                  if (f) await setHeroProfileFile(f);
-                  e.target.value = "";
+                type="url"
+                placeholder="https://example.com/profile.jpg"
+                className={inputClass}
+                value={data.assets.heroImageUrl || ""}
+                onChange={(e) => {
+                  updateAssets({ heroImageUrl: e.target.value });
                 }}
               />
-              <button
-                type="button"
-                className="mt-3 text-sm text-red-300 hover:underline"
-                onClick={() => void setHeroProfileFile(null)}
-              >
-                Remove custom — use default photo
-              </button>
               <p className="mt-2 text-xs text-zinc-600">
-                Active key: {data.assets.heroImageKey ?? "none (default)"}
+                Current: {data.assets.heroImageUrl || "none (default)"}
               </p>
             </div>
             <div className="rounded-lg border border-white/10 bg-zinc-950/50 p-4">
-              <h3 className="text-sm font-semibold text-white">About Me image</h3>
-              <p className="mt-1 text-xs text-zinc-500">PNG, JPG, WebP, etc.</p>
+              <h3 className="text-sm font-semibold text-white">About Me image URL</h3>
+              <p className="mt-1 text-xs text-zinc-500">Direct link to about section image</p>
               <input
-                type="file"
-                accept="image/*"
-                className="mt-3 block w-full text-sm text-zinc-300 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-600 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white"
-                onChange={async (e) => {
-                  const f = e.target.files?.[0];
-                  if (f) await setAboutProfileFile(f);
-                  e.target.value = "";
+                type="url"
+                placeholder="https://example.com/about.jpg"
+                className={inputClass}
+                value={data.assets.aboutImageUrl || ""}
+                onChange={(e) => {
+                  updateAssets({ aboutImageUrl: e.target.value });
                 }}
               />
-              <button
-                type="button"
-                className="mt-3 text-sm text-red-300 hover:underline"
-                onClick={() => void setAboutProfileFile(null)}
-              >
-                Remove custom — use default photo
-              </button>
               <p className="mt-2 text-xs text-zinc-600">
-                Active key: {data.assets.aboutImageKey ?? "none (default)"}
+                Current: {data.assets.aboutImageUrl || "none (default)"}
               </p>
             </div>
             <div className="md:col-span-2 rounded-lg border border-white/10 bg-zinc-950/50 p-4">
-              <h3 className="text-sm font-semibold text-white">Resume</h3>
-              <p className="mt-1 text-xs text-zinc-500">PDF, PNG, or JPG.</p>
+              <h3 className="text-sm font-semibold text-white">Resume URL</h3>
+              <p className="mt-1 text-xs text-zinc-500">Direct link to resume PDF or image</p>
               <input
-                type="file"
-                accept=".pdf,application/pdf,image/png,image/jpeg"
-                className="mt-3 block w-full text-sm text-zinc-300 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-600 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white"
-                onChange={async (e) => {
-                  const f = e.target.files?.[0];
-                  if (f) await setResumeFile(f);
-                  e.target.value = "";
+                type="url"
+                placeholder="https://example.com/resume.pdf"
+                className={inputClass}
+                value={data.assets.resumeUrl || ""}
+                onChange={(e) => {
+                  updateAssets({ resumeUrl: e.target.value });
                 }}
               />
-              <button
-                type="button"
-                className="mt-3 text-sm text-red-300 hover:underline"
-                onClick={() => void setResumeFile(null)}
-              >
-                Remove — use default public resume link
-              </button>
               <p className="mt-2 text-xs text-zinc-600">
-                Active key: {data.assets.resumeKey ?? "none (default)"} ·{" "}
-                {data.assets.resumeFileName ?? "—"}
+                Current: {data.assets.resumeUrl || "none (default)"}
               </p>
             </div>
+          </div>
+        </section>
+      )}
+
+      {tab === "ads" && (
+        <section className="space-y-6 rounded-xl border border-white/10 bg-zinc-900/40 p-4 sm:p-5">
+          <h2 className="text-lg font-semibold text-white">Ad Management</h2>
+          <p className="text-sm text-zinc-400">
+            Manage advertisement banners. One random ad will be displayed horizontally at the bottom of each newsletter page.
+          </p>
+
+          <div className="space-y-4">
+            {data.ads.map((ad, index) => (
+              <div key={ad.id} className="rounded-lg border border-white/10 bg-zinc-950/50 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 space-y-3">
+                    <div>
+                      <label className={labelClass}>Ad Image URL</label>
+                      <input
+                        type="url"
+                        placeholder="https://example.com/ad-banner.jpg"
+                        className={inputClass}
+                        value={ad.imageUrl}
+                        onChange={(e) => {
+                          const newAds = [...data.ads];
+                          newAds[index].imageUrl = e.target.value;
+                          setAds(newAds);
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Ad Redirect URL</label>
+                      <input
+                        type="url"
+                        placeholder="https://example.com/landing-page"
+                        className={inputClass}
+                        value={ad.redirectUrl}
+                        onChange={(e) => {
+                          const newAds = [...data.ads];
+                          newAds[index].redirectUrl = e.target.value;
+                          setAds(newAds);
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newAds = data.ads.filter((_, i) => i !== index);
+                      setAds(newAds);
+                    }}
+                    className="mt-6 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/20"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => {
+                const newAd = {
+                  id: crypto.randomUUID(),
+                  imageUrl: "",
+                  redirectUrl: "",
+                };
+                setAds([...data.ads, newAd]);
+              }}
+              className="w-full rounded-lg border border-violet-500/20 bg-violet-500/10 px-4 py-3 text-sm font-medium text-violet-400 hover:bg-violet-500/20"
+            >
+              + Add New Ad
+            </button>
           </div>
         </section>
       )}
@@ -914,7 +1010,7 @@ export function AdminApp() {
                 <textarea
                   rows={2}
                   className={inputClass}
-                  value={about.sectionLeadEn}
+                  value={about?.sectionLeadEn || ""}
                   onChange={(e) => updateAbout({ sectionLeadEn: e.target.value })}
                 />
               </div>
@@ -923,7 +1019,7 @@ export function AdminApp() {
                 <textarea
                   rows={2}
                   className={inputClass}
-                  value={about.sectionLeadBn}
+                  value={about?.sectionLeadBn || ""}
                   onChange={(e) => updateAbout({ sectionLeadBn: e.target.value })}
                 />
               </div>
@@ -932,7 +1028,7 @@ export function AdminApp() {
                 <textarea
                   rows={4}
                   className={inputClass}
-                  value={about.journeyEn}
+                  value={about?.journeyEn || ""}
                   onChange={(e) => updateAbout({ journeyEn: e.target.value })}
                 />
               </div>
@@ -941,7 +1037,7 @@ export function AdminApp() {
                 <textarea
                   rows={4}
                   className={inputClass}
-                  value={about.journeyBn}
+                  value={about?.journeyBn || ""}
                   onChange={(e) => updateAbout({ journeyBn: e.target.value })}
                 />
               </div>
@@ -949,7 +1045,7 @@ export function AdminApp() {
                 <label className={labelClass}>Goal title (EN)</label>
                 <input
                   className={inputClass}
-                  value={about.goalTitleEn}
+                  value={about?.goalTitleEn || ""}
                   onChange={(e) => updateAbout({ goalTitleEn: e.target.value })}
                 />
               </div>
@@ -957,7 +1053,7 @@ export function AdminApp() {
                 <label className={labelClass}>Goal title (BN)</label>
                 <input
                   className={inputClass}
-                  value={about.goalTitleBn}
+                  value={about?.goalTitleBn || ""}
                   onChange={(e) => updateAbout({ goalTitleBn: e.target.value })}
                 />
               </div>
@@ -966,7 +1062,7 @@ export function AdminApp() {
                 <textarea
                   rows={3}
                   className={inputClass}
-                  value={about.goalEn}
+                  value={about?.goalEn || ""}
                   onChange={(e) => updateAbout({ goalEn: e.target.value })}
                 />
               </div>
@@ -975,7 +1071,7 @@ export function AdminApp() {
                 <textarea
                   rows={3}
                   className={inputClass}
-                  value={about.goalBn}
+                  value={about?.goalBn || ""}
                   onChange={(e) => updateAbout({ goalBn: e.target.value })}
                 />
               </div>
@@ -983,7 +1079,7 @@ export function AdminApp() {
                 <label className={labelClass}>Vision title (EN)</label>
                 <input
                   className={inputClass}
-                  value={about.visionTitleEn}
+                  value={about?.visionTitleEn || ""}
                   onChange={(e) => updateAbout({ visionTitleEn: e.target.value })}
                 />
               </div>
@@ -991,7 +1087,7 @@ export function AdminApp() {
                 <label className={labelClass}>Vision title (BN)</label>
                 <input
                   className={inputClass}
-                  value={about.visionTitleBn}
+                  value={about?.visionTitleBn || ""}
                   onChange={(e) => updateAbout({ visionTitleBn: e.target.value })}
                 />
               </div>
@@ -1000,7 +1096,7 @@ export function AdminApp() {
                 <textarea
                   rows={2}
                   className={inputClass}
-                  value={about.visionEn}
+                  value={about?.visionEn || ""}
                   onChange={(e) => updateAbout({ visionEn: e.target.value })}
                 />
               </div>
@@ -1009,8 +1105,58 @@ export function AdminApp() {
                 <textarea
                   rows={2}
                   className={inputClass}
-                  value={about.visionBn}
+                  value={about?.visionBn || ""}
                   onChange={(e) => updateAbout({ visionBn: e.target.value })}
+                />
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-4 rounded-xl border border-white/10 bg-zinc-900/40 p-5">
+            <h2 className="text-lg font-semibold text-white">Personal Information</h2>
+            <p className="text-sm text-zinc-400">
+              Basic contact and profile information displayed in the About section.
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className={labelClass}>Full Name</label>
+                <input
+                  className={inputClass}
+                  value={about?.name || ""}
+                  onChange={(e) => updateAbout({ name: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Professional Title</label>
+                <input
+                  className={inputClass}
+                  value={about?.title || ""}
+                  onChange={(e) => updateAbout({ title: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Address/Location</label>
+                <input
+                  className={inputClass}
+                  value={about?.location || ""}
+                  onChange={(e) => updateAbout({ location: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Email</label>
+                <input
+                  type="email"
+                  className={inputClass}
+                  value={about?.email || ""}
+                  onChange={(e) => updateAbout({ email: e.target.value })}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className={labelClass}>Education/Credential</label>
+                <input
+                  className={inputClass}
+                  value={about?.education || ""}
+                  onChange={(e) => updateAbout({ education: e.target.value })}
                 />
               </div>
             </div>
@@ -1109,6 +1255,107 @@ export function AdminApp() {
             </ul>
           </section>
         </div>
+      )}
+
+      {tab === "social" && (
+        <section className="space-y-4 rounded-xl border border-white/10 bg-zinc-900/40 p-5">
+          <h2 className="text-lg font-semibold text-white">Social Media Links</h2>
+          <p className="text-sm text-zinc-400">
+            Update your social media profiles. These links appear in the footer and about section.
+          </p>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className={labelClass}>GitHub</label>
+              <input
+                type="url"
+                className={inputClass}
+                value={social?.github || ""}
+                onChange={(e) => updateSocial({ github: e.target.value })}
+                placeholder="https://github.com/username"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>LinkedIn</label>
+              <input
+                type="url"
+                className={inputClass}
+                value={social?.linkedin || ""}
+                onChange={(e) => updateSocial({ linkedin: e.target.value })}
+                placeholder="https://linkedin.com/in/username"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Facebook</label>
+              <input
+                type="url"
+                className={inputClass}
+                value={social?.facebook || ""}
+                onChange={(e) => updateSocial({ facebook: e.target.value })}
+                placeholder="https://facebook.com/username"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>YouTube</label>
+              <input
+                type="url"
+                className={inputClass}
+                value={social?.youtube || ""}
+                onChange={(e) => updateSocial({ youtube: e.target.value })}
+                placeholder="https://youtube.com/@username"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Discord</label>
+              <input
+                type="url"
+                className={inputClass}
+                value={social?.discord || ""}
+                onChange={(e) => updateSocial({ discord: e.target.value })}
+                placeholder="https://discord.gg/invite"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>X (Twitter)</label>
+              <input
+                type="url"
+                className={inputClass}
+                value={social?.x || ""}
+                onChange={(e) => updateSocial({ x: e.target.value })}
+                placeholder="https://x.com/username"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Instagram</label>
+              <input
+                type="url"
+                className={inputClass}
+                value={social?.instagram || ""}
+                onChange={(e) => updateSocial({ instagram: e.target.value })}
+                placeholder="https://instagram.com/username"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Telegram</label>
+              <input
+                type="url"
+                className={inputClass}
+                value={social?.telegram || ""}
+                onChange={(e) => updateSocial({ telegram: e.target.value })}
+                placeholder="https://t.me/username"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>WhatsApp</label>
+              <input
+                type="url"
+                className={inputClass}
+                value={social?.whatsapp || ""}
+                onChange={(e) => updateSocial({ whatsapp: e.target.value })}
+                placeholder="https://wa.me/1234567890"
+              />
+            </div>
+          </div>
+        </section>
       )}
 
       {tab === "projects" && (
@@ -1430,6 +1677,51 @@ export function AdminApp() {
                   value={editingBlog.imageAlt}
                   onChange={(e) => setEditingBlog({ ...editingBlog, imageAlt: e.target.value })}
                 />
+              </div>
+              <div>
+                <label className={labelClass}>Category (EN)</label>
+                <input
+                  className={inputClass}
+                  value={editingBlog.category || ""}
+                  onChange={(e) => setEditingBlog({ ...editingBlog, category: e.target.value })}
+                  placeholder="e.g., Tutorial, News, Tips"
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Category (Bengali, optional)</label>
+                <input
+                  className={inputClass}
+                  value={editingBlog.categoryBn || ""}
+                  onChange={(e) => setEditingBlog({ ...editingBlog, categoryBn: e.target.value })}
+                  placeholder="e.g., টিউটোরিয়াল, সংবাদ, টিপস"
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Short Link (auto-generated)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    className={`${inputClass} flex-1`}
+                    value={editingBlog.shortLink || generateShortLink(editingBlog.slug || editingBlog.id)}
+                    readOnly
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const link = generateShortLink(editingBlog.slug || editingBlog.id);
+                      setEditingBlog({ ...editingBlog, shortLink: link });
+                      try {
+                        navigator.clipboard.writeText(link);
+                        alert("Link copied to clipboard!");
+                      } catch {
+                        alert("Could not copy to clipboard");
+                      }
+                    }}
+                    className="rounded-lg bg-sky-600 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-500 shrink-0"
+                  >
+                    Copy
+                  </button>
+                </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button

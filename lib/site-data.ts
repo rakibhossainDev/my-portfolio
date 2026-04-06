@@ -56,6 +56,24 @@ export type AboutCms = {
   visionTitleBn: string;
   visionEn: string;
   visionBn: string;
+  // Personal info
+  name: string;
+  title: string;
+  location: string;
+  email: string;
+  education: string;
+};
+
+export type SocialLinksCms = {
+  github: string;
+  linkedin: string;
+  facebook: string;
+  youtube: string;
+  discord: string;
+  x: string;
+  instagram: string;
+  telegram: string;
+  whatsapp: string;
 };
 
 export type SkillCms = {
@@ -77,6 +95,16 @@ export type SiteAssets = {
   aboutImageKey: string | null;
   resumeKey: string | null;
   resumeFileName: string | null;
+  // URL-based assets (no file upload)
+  heroImageUrl: string;
+  aboutImageUrl: string;
+  resumeUrl: string;
+};
+
+export type AdEntry = {
+  id: string;
+  imageUrl: string;
+  redirectUrl: string;
 };
 
 export type ContactMessage = {
@@ -119,6 +147,10 @@ export type SiteDataPayload = {
   recycleBin: SiteRecycleBin;
   /** Home section taglines; omitted in older payloads until merged on load. */
   sectionTaglines: SectionTaglinesCms;
+  /** Social media links */
+  social: SocialLinksCms;
+  /** Advertisement entries */
+  ads: AdEntry[];
 };
 
 type LegacyV1Payload = {
@@ -133,6 +165,9 @@ export function defaultAssets(): SiteAssets {
     aboutImageKey: null,
     resumeKey: null,
     resumeFileName: null,
+    heroImageUrl: "",
+    aboutImageUrl: "",
+    resumeUrl: "",
   };
 }
 
@@ -154,10 +189,10 @@ function defaultStats(): StatCms[] {
     },
     {
       id: "s3",
-      value: "50",
-      suffix: "+",
-      labelEn: "Apps Released on Play Store",
-      labelBn: "প্লে স্টোরে প্রকাশিত অ্যাপ",
+      value: "",
+      suffix: "",
+      labelEn: "50+ Apps Published on Play Store",
+      labelBn: "প্লে স্টোরে ৫০+ অ্যাপ প্রকাশিত",
     },
   ];
 }
@@ -205,6 +240,12 @@ function defaultAbout(): AboutCms {
     visionTitleBn: aboutBn.visionTitle,
     visionEn: a.vision,
     visionBn: aboutBn.vision,
+    // Personal info
+    name: a.name,
+    title: a.title,
+    location: a.location,
+    email: a.email,
+    education: a.credential,
   };
 }
 
@@ -214,6 +255,20 @@ function defaultSkills(): SkillCms[] {
     name: s.name,
     percent: s.percent,
   }));
+}
+
+function defaultSocial(): SocialLinksCms {
+  return {
+    github: site.social.github,
+    linkedin: site.social.linkedin,
+    facebook: site.social.facebook,
+    youtube: site.connect.youtube,
+    discord: site.connect.discord,
+    x: site.connect.x,
+    instagram: site.connect.instagram,
+    telegram: site.connect.telegram,
+    whatsapp: site.connect.whatsapp,
+  };
 }
 
 function defaultEducation(): EducationCmsEntry[] {
@@ -235,6 +290,8 @@ export function getDefaultSiteData(): SiteDataPayload {
     messages: [],
     recycleBin: emptyRecycleBin(),
     sectionTaglines: defaultSectionTaglines(),
+    social: defaultSocial(),
+    ads: [],
   };
 }
 
@@ -403,6 +460,33 @@ function isSectionTaglines(x: unknown): x is SectionTaglinesCms {
   return keys.every((k) => typeof o[k] === "string");
 }
 
+function isSocialLinksCms(x: unknown): x is SocialLinksCms {
+  if (!x || typeof x !== "object") return false;
+  const o = x as Record<string, unknown>;
+  const keys: (keyof SocialLinksCms)[] = [
+    "github",
+    "linkedin",
+    "facebook",
+    "youtube",
+    "discord",
+    "x",
+    "instagram",
+    "telegram",
+    "whatsapp",
+  ];
+  return keys.every((k) => typeof o[k] === "string");
+}
+
+function isAdEntry(x: unknown): x is AdEntry {
+  if (!x || typeof x !== "object") return false;
+  const o = x as Record<string, unknown>;
+  return (
+    typeof o.id === "string" &&
+    typeof o.imageUrl === "string" &&
+    typeof o.redirectUrl === "string"
+  );
+}
+
 export function mergeSectionTaglines(raw: unknown, about: AboutCms): SectionTaglinesCms {
   const base = defaultSectionTaglines();
   if (!isSectionTaglines(raw)) {
@@ -430,6 +514,9 @@ function buildPayloadFromCore(raw: Record<string, unknown>): SiteDataPayload | n
     : [];
   const about = raw.about as AboutCms;
   const sectionTaglines = mergeSectionTaglines(raw.sectionTaglines, about);
+  const ads = Array.isArray(raw.ads) && raw.ads.every(isAdEntry)
+    ? (raw.ads as AdEntry[])
+    : [];
 
   return {
     version: 3,
@@ -444,6 +531,8 @@ function buildPayloadFromCore(raw: Record<string, unknown>): SiteDataPayload | n
     messages,
     recycleBin: parseRecycleBin(raw.recycleBin),
     sectionTaglines,
+    social: isSocialLinksCms(raw.social) ? raw.social : defaultSocial(),
+    ads,
   };
 }
 

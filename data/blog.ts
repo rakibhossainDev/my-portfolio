@@ -15,6 +15,9 @@ export type BlogPost = {
   imageSrc: string;
   imageAlt: string;
   content: string[];
+  category?: string;
+  categoryBn?: string;
+  shortLink?: string;
 };
 
 export const blogPosts: BlogPost[] = blogJson as BlogPost[];

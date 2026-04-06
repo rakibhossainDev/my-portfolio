@@ -4,25 +4,26 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { usePreferences } from "@/components/preferences-provider";
+import { navbarBn } from "@/data/translations";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-  { id: "hero", label: "Home" },
-  { id: "about", label: "About" },
-  { id: "projects", label: "Projects" },
-  { id: "blog", label: "Blog" },
-  { id: "contact", label: "Contact" },
-] as const;
-
-function sectionHref(pathname: string | null, id: string) {
-  if (id === "hero") return pathname === "/" ? "#hero" : "/#hero";
-  return pathname === "/" ? `#${id}` : `/#${id}`;
-}
 
 export function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { locale, setLocale } = usePreferences();
+
+  const navItems = [
+    { id: "hero", label: locale === "bn" ? navbarBn.home : "Home" },
+    { id: "about", label: locale === "bn" ? navbarBn.about : "About" },
+    { id: "projects", label: locale === "bn" ? navbarBn.projects : "Projects" },
+    { id: "blog", label: locale === "bn" ? navbarBn.blog : "Blog" },
+    { id: "contact", label: locale === "bn" ? navbarBn.contact : "Contact" },
+  ] as const;
+
+  function sectionHref(pathname: string | null, id: string) {
+    if (id === "hero") return pathname === "/" ? "#hero" : "/#hero";
+    return pathname === "/" ? `#${id}` : `/#${id}`;
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/50 bg-white/70 shadow-sm shadow-violet-500/5 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
@@ -35,17 +36,17 @@ export function Navbar() {
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-blue-600 text-xs font-bold text-white shadow-md shadow-violet-500/25 sm:h-10 sm:w-10 sm:text-sm">
             RH
           </span>
-          <span className="hidden text-sm font-semibold tracking-tight text-slate-900 sm:inline">
+          <span className="hidden text-sm font-semibold tracking-tight text-slate-900 sm:inline lg:text-base">
             MD RAKIB HOSSAIN
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-0.5 md:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-0.5 md:flex lg:gap-1" aria-label="Primary">
           {navItems.map((item) => (
             <Link
               key={item.id}
               href={sectionHref(pathname, item.id)}
-              className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-white/60 hover:text-violet-700 lg:px-3"
+              className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-white/60 hover:text-violet-700 lg:px-4 lg:text-base"
             >
               {item.label}
             </Link>
@@ -62,7 +63,7 @@ export function Navbar() {
               type="button"
               onClick={() => setLocale("en")}
               className={cn(
-                "rounded-md px-2 py-1 text-[11px] font-bold tracking-wide transition sm:px-2.5 sm:py-1.5 sm:text-xs",
+                "rounded-md px-2 py-1 text-[11px] font-bold tracking-wide transition sm:px-2.5 sm:py-1.5 sm:text-xs lg:text-sm",
                 locale === "en"
                   ? "bg-white text-violet-700 shadow-sm"
                   : "text-slate-500 hover:text-slate-800",
@@ -74,7 +75,7 @@ export function Navbar() {
               type="button"
               onClick={() => setLocale("bn")}
               className={cn(
-                "rounded-md px-2 py-1 text-[11px] font-bold tracking-wide transition sm:px-2.5 sm:py-1.5 sm:text-xs",
+                "rounded-md px-2 py-1 text-[11px] font-bold tracking-wide transition sm:px-2.5 sm:py-1.5 sm:text-xs lg:text-sm",
                 locale === "bn"
                   ? "bg-white text-violet-700 shadow-sm"
                   : "text-slate-500 hover:text-slate-800",

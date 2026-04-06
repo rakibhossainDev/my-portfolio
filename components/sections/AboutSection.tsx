@@ -74,9 +74,10 @@ export function AboutSection() {
     resolvedAboutImageSrc,
     resolvedResumeHref,
     resolvedResumeDownloadName,
+    social,
   } = useSiteData();
   const bn = locale === "bn";
-  const a = site.about;
+  const a = cms; // Use CMS data instead of static site.about
 
   const sectionTitle = bn ? "পরিচিতি" : "About Me";
   const sectionLead = bn ? sectionTaglines.aboutLeadBn : sectionTaglines.aboutLeadEn;
@@ -161,11 +162,11 @@ export function AboutSection() {
                 >
                   {a.email}
                 </a>
-                <p className="text-sm text-slate-500">{a.credential}</p>
+                <p className="text-sm text-slate-500">{a.education}</p>
 
                 <div className="flex flex-wrap gap-2 pt-0.5">
                   <a
-                    href={site.social.linkedin}
+                    href={social.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-interactive flex h-10 w-10 items-center justify-center rounded-xl border border-white/70 bg-white/50 text-[#0A66C2] shadow-sm backdrop-blur-md hover:border-[#0A66C2]/30 hover:text-[#004182]"
@@ -176,7 +177,7 @@ export function AboutSection() {
                     </svg>
                   </a>
                   <a
-                    href={site.social.github}
+                    href={social.github}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-interactive flex h-10 w-10 items-center justify-center rounded-xl border border-white/70 bg-white/50 text-slate-700 shadow-sm backdrop-blur-md hover:border-violet-300/60 hover:text-violet-700"
@@ -191,7 +192,7 @@ export function AboutSection() {
                     </svg>
                   </a>
                   <a
-                    href={site.social.facebook}
+                    href={social.facebook}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-interactive flex h-10 w-10 items-center justify-center rounded-xl border border-white/70 bg-white/50 text-[#1877F2] shadow-sm backdrop-blur-md hover:border-[#1877F2]/30 hover:text-[#0d5dbf]"

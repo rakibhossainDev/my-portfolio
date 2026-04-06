@@ -39,3 +39,11 @@ export const footerBn = {
   tagline:
     "ফ্লাটার অ্যাপ ডেভেলপার — পালিশ করা আইওএস ও অ্যান্ড্রয়েড অভিজ্ঞতা তৈরি করছি।",
 } as const;
+
+export const navbarBn = {
+  home: "হোম",
+  about: "আমার সম্পর্কে",
+  projects: "প্রকল্প",
+  blog: "ব্লগ",
+  contact: "যোগাযোগ",
+} as const;
