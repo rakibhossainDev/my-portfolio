@@ -113,7 +113,7 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
         </Link>
       </div>
 
-      <div className="relative z-10 flex flex-1 flex-col bg-white/30 p-4 sm:p-6">
+      <div className="relative z-10 flex flex-1 flex-col min-h-0 bg-white/30 p-4 sm:p-6">
         <h3 className="text-base font-semibold text-slate-900 sm:text-lg">
           <Link
             href={detailHref}
@@ -123,7 +123,7 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
           </Link>
         </h3>
 
-        <p className="mt-1 text-sm leading-relaxed text-slate-600">{project.description}</p>
+        <p className="mt-1 text-sm leading-relaxed text-slate-600 line-clamp-3 overflow-hidden">{project.description}</p>
 
         <div className="mt-2 relative overflow-hidden whitespace-nowrap sm:flex-wrap sm:overflow-visible sm:mt-4">
           <div className="flex gap-2">
