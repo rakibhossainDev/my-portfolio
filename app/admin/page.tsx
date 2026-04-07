@@ -3,7 +3,7 @@ import { AdminApp } from "@/components/admin/admin-app";
 
 export const metadata: Metadata = {
   title: "Admin",
-  description: "Portfolio site management (draft).",
+  description: "Portfolio site management.",
   robots: { index: false, follow: false },
 };
 

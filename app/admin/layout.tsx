@@ -15,9 +15,6 @@ export default function AdminLayout({
           <Link href="/admin" className="text-sm font-semibold text-white">
             Admin
           </Link>
-          <span className="ml-2 rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-200">
-            Draft
-          </span>
         </div>
         <nav className="flex gap-1 overflow-x-auto p-2 md:flex-col md:overflow-visible" aria-label="Admin">
           <Link

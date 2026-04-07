@@ -593,6 +593,9 @@ export function parseSiteDataPayload(raw: unknown): SiteDataPayload | null {
   return null;
 }
 
+import { getFirestoreClient } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+
 export function loadSiteDataFromStorage(): SiteDataPayload | null {
   if (typeof window === "undefined") return null;
   try {
@@ -615,6 +618,8 @@ export function loadSiteDataFromStorage(): SiteDataPayload | null {
   return null;
 }
 
+/** Attempt to persist to both localStorage and Firestore. Firestore calls are best-effort.
+ * Keeps localStorage for fast sync and offline fallback. */
 export function saveSiteDataToStorage(data: SiteDataPayload) {
   if (typeof window === "undefined") return;
   try {
@@ -622,6 +627,37 @@ export function saveSiteDataToStorage(data: SiteDataPayload) {
     window.dispatchEvent(new CustomEvent("rh-site-data-changed"));
   } catch {
     /* ignore quota */
+  }
+
+  // Fire-and-forget: write to Firestore if configured
+  try {
+    const db = getFirestoreClient();
+    if (db) {
+      const ref = doc(db, "siteData", "main");
+      // setDoc returns a promise — don't await here to avoid blocking UI
+      setDoc(ref, data, { merge: true }).catch(() => {
+        /* ignore network errors */
+      });
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Fetch site data from Firestore if available. Returns parsed payload or null. */
+export async function loadSiteDataFromFirestore(): Promise<SiteDataPayload | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const db = getFirestoreClient();
+    if (!db) return null;
+    const ref = doc(db, "siteData", "main");
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    const raw = snap.data();
+    const parsed = parseSiteDataPayload(raw);
+    return parsed;
+  } catch (e) {
+    return null;
   }
 }
 

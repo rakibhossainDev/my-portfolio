@@ -20,6 +20,20 @@ import {
   getPortfolioBlob,
   putPortfolioBlob,
 } from "@/lib/portfolio-blob-db";
+import {
+  subscribeToProjects,
+  subscribeToHero,
+  subscribeToStats,
+  saveProjectToFirestore,
+  deleteProjectFromFirestore,
+  saveHeroToFirestore,
+  saveStatsToFirestore,
+  getAllProjectsOnce,
+  subscribeToBlogs,
+  saveBlogToFirestore,
+  deleteBlogFromFirestore,
+  getAllBlogsOnce,
+} from "@/lib/firebase";
 import { RESUME_DOWNLOAD_FILENAME, RESUME_HREF } from "@/lib/resume";
 import {
   emptyRecycleBin,
@@ -101,6 +115,7 @@ type SiteDataContextValue = {
   resetToDefaults: () => Promise<void>;
   updateSectionTaglines: (patch: Partial<SectionTaglinesCms>) => void;
   setLogoUrl: (url: string) => void;
+  usingFirestore: boolean;
   /** Restores hero, all section taglines, and About section leads to built-in defaults (does not touch projects, blog, skills, etc.). */
   resetMarketingCopyToDefaults: () => void;
 };
@@ -117,6 +132,7 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
   const [resolvedResumeDownloadName, setResolvedResumeDownloadName] = useState<string>(
     RESUME_DOWNLOAD_FILENAME,
   );
+  const [usingFirestore, setUsingFirestore] = useState(false);
 
   const heroBlobRef = useRef<string | null>(null);
   const aboutBlobRef = useRef<string | null>(null);
@@ -138,26 +154,92 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const stored = loadSiteDataFromStorage();
-    startTransition(() => {
-      if (stored) {
-        setData(stored);
+    let cancelled = false;
+    let firestoreReady = false;
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+
+    (async () => {
+      // Try to subscribe to Firestore first. If any subscription emits, we treat Firestore as primary.
+      try {
+        const unsubProjects = subscribeToProjects((projectsArr) => {
+          if (cancelled) return;
+          firestoreReady = true;
+          setUsingFirestore(true);
+          replaceData((prev) => ({ ...prev, projects: projectsArr }));
+          setHydrated(true);
+        });
+
+        const unsubBlogs = subscribeToBlogs((blogsArr) => {
+          if (cancelled) return;
+          firestoreReady = true;
+          setUsingFirestore(true);
+          replaceData((prev) => ({ ...prev, blogs: blogsArr }));
+          setHydrated(true);
+        });
+
+        const unsubHero = subscribeToHero((heroDoc) => {
+          if (cancelled) return;
+          if (heroDoc) {
+            firestoreReady = true;
+            setUsingFirestore(true);
+            replaceData((prev) => ({ ...prev, hero: { ...prev.hero, ...heroDoc } }));
+            setHydrated(true);
+          }
+        });
+
+        const unsubStats = subscribeToStats((statsArr) => {
+          if (cancelled) return;
+          firestoreReady = true;
+          setUsingFirestore(true);
+          replaceData((prev) => ({ ...prev, stats: statsArr }));
+          setHydrated(true);
+        });
+
+        // If subscriptions don't report quickly, fallback to localStorage so the app stays usable offline.
+        fallbackTimer = setTimeout(async () => {
+          if (firestoreReady || cancelled) return;
+          // Firestore didn't respond quickly — load localStorage as fallback
+          try {
+            const stored = loadSiteDataFromStorage();
+            if (stored) {
+              replaceData(() => stored);
+            }
+          } catch {
+            /* ignore */
+          }
+          setHydrated(true);
+        }, 1200);
+
+        return () => {
+          cancelled = true;
+          if (fallbackTimer) clearTimeout(fallbackTimer);
+          try {
+            unsubProjects && unsubProjects();
+          } catch {}
+          try {
+            unsubBlogs && unsubBlogs();
+          } catch {}
+          try {
+            unsubHero && unsubHero();
+          } catch {}
+          try {
+            unsubStats && unsubStats();
+          } catch {}
+        };
+      } catch {
+        // Firestore unavailable — fallback to local storage immediately
         try {
-          const raw = localStorage.getItem(SITE_DATA_STORAGE_KEY);
-          if (raw) {
-            const parsed = JSON.parse(raw) as { version?: number };
-            if (parsed.version === 2) saveSiteDataToStorage(stored);
-          }
-          if (localStorage.getItem(SITE_DATA_LEGACY_KEY)) {
-            saveSiteDataToStorage(stored);
-            localStorage.removeItem(SITE_DATA_LEGACY_KEY);
-          }
-        } catch {
-          /* ignore */
-        }
+          const stored = loadSiteDataFromStorage();
+          if (stored) replaceData(() => stored);
+        } catch {}
+        setHydrated(true);
       }
-      setHydrated(true);
-    });
+    })();
+
+    return () => {
+      cancelled = true;
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+    };
   }, []);
 
   useEffect(() => {
@@ -278,6 +360,12 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
           idx === -1 ? [...prev.projects, p] : prev.projects.map((x) => (x.id === p.id ? p : x));
         return { ...prev, projects: next };
       });
+      // Persist to Firestore collection if available
+      try {
+        saveProjectToFirestore(p).catch(() => {});
+      } catch {
+        /* ignore */
+      }
     },
     [replaceData],
   );
@@ -297,6 +385,9 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
           },
         };
       });
+      try {
+        deleteProjectFromFirestore(id).catch(() => {});
+      } catch {}
     },
     [replaceData],
   );
@@ -328,6 +419,9 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
           idx === -1 ? [...prev.blogs, b] : prev.blogs.map((x) => (x.id === b.id ? b : x));
         return { ...prev, blogs: next };
       });
+      try {
+        saveBlogToFirestore(b).catch(() => {});
+      } catch {}
     },
     [replaceData],
   );
@@ -347,6 +441,9 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
           },
         };
       });
+      try {
+        deleteBlogFromFirestore(id).catch(() => {});
+      } catch {}
     },
     [replaceData],
   );
@@ -354,6 +451,9 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
   const updateHero = useCallback(
     (patch: Partial<HeroCms>) => {
       replaceData((prev) => ({ ...prev, hero: { ...prev.hero, ...patch } }));
+      try {
+        saveHeroToFirestore(patch as Record<string, any>).catch(() => {});
+      } catch {}
     },
     [replaceData],
   );
@@ -361,6 +461,9 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
   const setStats = useCallback(
     (stats: StatCms[]) => {
       replaceData((prev) => ({ ...prev, stats }));
+      try {
+        saveStatsToFirestore(stats as Record<string, any>[]).catch(() => {});
+      } catch {}
     },
     [replaceData],
   );
@@ -763,6 +866,7 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       updateSectionTaglines,
       setLogoUrl,
       resetMarketingCopyToDefaults,
+      usingFirestore,
     }),
     [
       data,
@@ -801,6 +905,7 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       deleteCertificate,
       setLogoUrl,
       resetMarketingCopyToDefaults,
+      usingFirestore,
     ],
   );
 

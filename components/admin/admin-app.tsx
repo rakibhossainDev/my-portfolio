@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, startTransition, useState } from "react";
+import { getAuthClient, signInWithGooglePopupSafe, signInWithGoogleRedirectSafe, signOutSafe } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import type { BlogPost } from "@/data/blog";
 import type { Certificate } from "@/data/certificates";
 import type { Project } from "@/data/projects";
@@ -123,6 +125,8 @@ export function AdminApp() {
   const [pass, setPass] = useState("");
   const [loginError, setLoginError] = useState("");
   const [tab, setTab] = useState<Tab>("hero");
+  const [firebaseUser, setFirebaseUser] = useState<any>(null);
+  const [firebaseAuthed, setFirebaseAuthed] = useState(false);
 
   const {
     data,
@@ -170,6 +174,7 @@ export function AdminApp() {
     setAds,
     setLogoUrl,
     updateAssets,
+    usingFirestore,
   } = useSiteData();
 
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -186,6 +191,17 @@ export function AdminApp() {
       setAuthed(isAdminSession());
       setReady(true);
     });
+  }, []);
+
+  useEffect(() => {
+    const auth = getAuthClient();
+    if (!auth) return;
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setFirebaseUser(u);
+      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+      setFirebaseAuthed(!!u && (!adminEmail || u.email === adminEmail));
+    });
+    return () => unsub();
   }, []);
 
   const login = useCallback(
@@ -210,6 +226,36 @@ export function AdminApp() {
     setPass("");
   }, []);
 
+  const signInWithGoogle = useCallback(async () => {
+    if (!signInWithGooglePopupSafe) return alert("Firebase not configured");
+    try {
+      await signInWithGooglePopupSafe();
+    } catch (e: any) {
+      // Popup blocked or other popup issues — fall back to redirect which is more reliable
+      try {
+        await signInWithGoogleRedirectSafe();
+      } catch (err: any) {
+        alert(err?.message || "Firebase sign-in failed");
+      }
+    }
+  }, []);
+
+  const signOut = useCallback(async () => {
+    try {
+      await signOutSafe();
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const ensureFirebaseAuthed = useCallback(() => {
+    if (!firebaseAuthed) {
+      alert("Please sign in with Firebase to save changes.");
+      return false;
+    }
+    return true;
+  }, [firebaseAuthed]);
+
   const openNewProject = () => {
     const p = emptyProject();
     setEditingProject(p);
@@ -225,6 +271,7 @@ export function AdminApp() {
 
   const saveProject = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!ensureFirebaseAuthed()) return;
     if (!editingProject) return;
     const gallery = projectGalleryStr
       .split("\n")
@@ -257,6 +304,7 @@ export function AdminApp() {
 
   const saveBlog = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!ensureFirebaseAuthed()) return;
     if (!editingBlog) return;
     const blocks = parseContentBlocks(blogContentStr);
     const slug =
@@ -279,6 +327,7 @@ export function AdminApp() {
 
   const saveSkill = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!ensureFirebaseAuthed()) return;
     if (!editingSkill) return;
     const idx = skills.findIndex((s) => s.id === editingSkill.id);
     const next =
@@ -289,6 +338,7 @@ export function AdminApp() {
 
   const saveEducation = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!ensureFirebaseAuthed()) return;
     if (!editingEdu) return;
     const idx = education.findIndex((x) => x.id === editingEdu.id);
     const next =
@@ -308,6 +358,7 @@ export function AdminApp() {
 
   const saveCertificate = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!ensureFirebaseAuthed()) return;
     if (!editingCert) return;
     // Validation: title and organization required
     if (!editingCert.title.trim() || !editingCert.organization.trim()) {
@@ -398,11 +449,7 @@ export function AdminApp() {
                 </button>
               </form>
 
-              <div className="mt-6 text-center">
-                <p className="text-xs text-zinc-500">
-                  Content is stored locally in your browser
-                </p>
-              </div>
+              
             </div>
           </div>
         </div>
@@ -412,12 +459,7 @@ export function AdminApp() {
 
   return (
     <div className="space-y-8">
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-        <strong className="font-semibold">Local draft.</strong> JSON lives in{" "}
-        <code className="rounded bg-black/30 px-1 font-mono text-xs">localStorage</code>; uploaded images and
-        resume use <code className="rounded bg-black/30 px-1 font-mono text-xs">IndexedDB</code>. Add server
-        auth before production.
-      </div>
+      
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -435,7 +477,7 @@ export function AdminApp() {
                   "Reset hero text, all home section taglines, and About intro lines to built-in defaults? Projects, blog, skills, and media are not changed.",
                 )
               ) {
-                resetMarketingCopyToDefaults();
+                if (ensureFirebaseAuthed()) resetMarketingCopyToDefaults();
               }
             }}
             className="rounded-lg border border-sky-500/40 px-3 py-2 text-sm text-sky-200 hover:bg-sky-500/10"
@@ -450,7 +492,7 @@ export function AdminApp() {
                   "Reset ALL site data (including uploaded images, resume, and inbox) to built-in defaults?",
                 )
               ) {
-                await resetToDefaults();
+                if (ensureFirebaseAuthed()) await resetToDefaults();
               }
             }}
             className="rounded-lg border border-amber-500/40 px-3 py-2 text-sm text-amber-200 hover:bg-amber-500/10"
@@ -463,6 +505,16 @@ export function AdminApp() {
             className="rounded-lg border border-white/15 px-3 py-2 text-sm text-zinc-300 hover:bg-white/5"
           >
             Log out
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (firebaseUser) signOut();
+              else signInWithGoogle();
+            }}
+            className="rounded-lg border border-white/15 px-3 py-2 text-sm text-zinc-300 hover:bg-white/5"
+          >
+            {firebaseUser ? `Firebase: ${firebaseUser.email} (Sign out)` : "Sign in (Firebase)"}
           </button>
         </div>
       </div>
@@ -897,6 +949,7 @@ export function AdminApp() {
                     <button
                       type="button"
                       onClick={() => {
+                        if (!ensureFirebaseAuthed()) return;
                         if (confirm("Move this certificate to the Recycle Bin?")) deleteCertificate(cert.id);
                       }}
                       className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/20"
@@ -1632,6 +1685,7 @@ export function AdminApp() {
                   <button
                     type="button"
                     onClick={() => {
+                      if (!ensureFirebaseAuthed()) return;
                       if (confirm("Move this project to the Recycle Bin?")) deleteProject(p.id);
                     }}
                     className="rounded-lg border border-red-500/30 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/10"
@@ -1680,6 +1734,7 @@ export function AdminApp() {
                   <button
                     type="button"
                     onClick={() => {
+                      if (!ensureFirebaseAuthed()) return;
                       if (confirm("Move this post to the Recycle Bin?")) deleteBlog(b.id);
                     }}
                     className="rounded-lg border border-red-500/30 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/10"
