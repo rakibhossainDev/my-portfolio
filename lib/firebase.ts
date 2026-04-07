@@ -15,6 +15,7 @@ import {
 } from "firebase/firestore";
 import type { Project } from "@/data/projects";
 import type { BlogPost } from "@/data/blog";
+import type { StatCms, HeroCms } from "@/lib/site-data";
 
 // Lightweight helpers for common CRUD/listen operations used by the admin and site provider.
 export function saveProjectToFirestore(p: Record<string, any>) {
@@ -79,45 +80,97 @@ export function subscribeToProjects(onChange: (items: Project[]) => void) {
   return unsub;
 }
 
-export function subscribeToHero(onChange: (docData: DocumentData | null) => void) {
+export function subscribeToHero(onChange: (docData: HeroCms | null) => void) {
   const app = initFirebase();
   if (!app) return () => {};
   const db = getFirestore(app);
   const ref = doc(db, "hero", "main");
   const unsub = onSnapshot(ref, (snap) => {
-    onChange(snap.exists() ? (snap.data() as DocumentData) : null);
+    if (!snap.exists()) return onChange(null);
+    const d = snap.data() as DocumentData;
+    const mapped: HeroCms = {
+      badgeEn: d.badgeEn ?? "",
+      badgeBn: d.badgeBn ?? "",
+      roleEn: d.roleEn ?? "",
+      roleBn: d.roleBn ?? "",
+      descriptionEn: d.descriptionEn ?? "",
+      descriptionBn: d.descriptionBn ?? "",
+    };
+    onChange(mapped);
   });
   return unsub;
 }
 
-export function subscribeToStats(onChange: (items: DocumentData[]) => void) {
+export function subscribeToStats(onChange: (items: StatCms[]) => void) {
   const app = initFirebase();
   if (!app) return () => {};
   const db = getFirestore(app);
   const q = query(collection(db, "stats"), orderBy("id"));
   const unsub = onSnapshot(q, (snap) => {
-    const arr = snap.docs.map((d) => d.data() as DocumentData);
+    const arr = snap.docs.map((d) => {
+      const data = d.data() as DocumentData;
+      return {
+        id: d.id,
+        value: data.value ?? "",
+        suffix: data.suffix ?? "",
+        labelEn: data.labelEn ?? "",
+        labelBn: data.labelBn ?? "",
+      } as StatCms;
+    });
     onChange(arr);
   });
   return unsub;
 }
 
-export async function getAllProjectsOnce(): Promise<DocumentData[]> {
+export async function getAllProjectsOnce(): Promise<Project[]> {
   const app = initFirebase();
   if (!app) return [];
   const db = getFirestore(app);
   const q = query(collection(db, "projects"), orderBy("title"));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ ...(d.data() as DocumentData), id: d.id }));
+  return snap.docs.map((d) => {
+    const data = d.data() as DocumentData;
+    return {
+      id: d.id,
+      title: data.title ?? "",
+      description: data.description ?? "",
+      tags: Array.isArray(data.tags) ? data.tags : [],
+      imageSrc: data.imageSrc ?? "/placeholder-project.svg",
+      imageAlt: data.imageAlt ?? "",
+      liveUrl: data.liveUrl ?? "#",
+      codeUrl: data.codeUrl ?? "#",
+      shareUrl: data.shareUrl,
+      stars: typeof data.stars === "number" && Number.isFinite(data.stars) ? Math.max(0, Math.floor(data.stars)) : 0,
+      gallery: Array.isArray(data.gallery) ? data.gallery.filter((u: any) => typeof u === "string" && u.trim()) : [],
+      detailMarkdown: typeof data.detailMarkdown === "string" ? data.detailMarkdown : "",
+    } as Project;
+  });
 }
 
-export async function getAllBlogsOnce(): Promise<DocumentData[]> {
+export async function getAllBlogsOnce(): Promise<BlogPost[]> {
   const app = initFirebase();
   if (!app) return [];
   const db = getFirestore(app);
   const q = query(collection(db, "blogs"), orderBy("date", "desc"));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ ...(d.data() as DocumentData), id: d.id }));
+  return snap.docs.map((d) => {
+    const data = d.data() as DocumentData;
+    return {
+      id: d.id,
+      slug: data.slug ?? "",
+      title: data.title ?? "",
+      titleBn: data.titleBn,
+      date: data.date ?? "",
+      excerpt: data.excerpt ?? "",
+      excerptBn: data.excerptBn,
+      imageSrc: data.imageSrc ?? "/placeholder-blog.svg",
+      imageAlt: data.imageAlt ?? "",
+      content: Array.isArray(data.content) ? data.content : [],
+      category: data.category,
+      categoryBn: data.categoryBn,
+      shortLink: data.shortLink,
+    } as BlogPost;
+  });
 }
 
 export function saveBlogToFirestore(b: Record<string, any>) {
