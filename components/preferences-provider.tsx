@@ -51,7 +51,16 @@ function readStoredTheme(): Theme | null {
 
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("en");
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [theme, setThemeState] = useState<Theme>(() => {
+    // initial theme: prefer stored, otherwise follow system preference
+    if (typeof window !== "undefined") {
+      const stored = readStoredTheme();
+      if (stored) return stored;
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      return prefersDark ? "dark" : "light";
+    }
+    return "light";
+  });
 
   useEffect(() => {
     startTransition(() => {
