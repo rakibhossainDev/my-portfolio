@@ -13,6 +13,7 @@ import {
   isAdminSession,
   setAdminSession,
 } from "@/lib/admin-auth";
+import { persistSiteDataToFirestore } from "@/lib/site-data";
 import type { EducationCmsEntry, SkillCms } from "@/lib/site-data";
 import { slugify, useSiteData } from "@/components/site-data-provider";
 
@@ -127,6 +128,9 @@ export function AdminApp() {
   const [tab, setTab] = useState<Tab>("hero");
   const [firebaseUser, setFirebaseUser] = useState<any>(null);
   const [firebaseAuthed, setFirebaseAuthed] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const {
     data,
@@ -256,6 +260,25 @@ export function AdminApp() {
     return true;
   }, [firebaseAuthed]);
 
+  const saveCurrentSiteData = useCallback(async () => {
+    if (!ensureFirebaseAuthed()) return;
+    setSaveLoading(true);
+    setSaveSuccess(false);
+    setSaveError(null);
+
+    try {
+      await persistSiteDataToFirestore(data);
+      setSaveSuccess(true);
+      console.log("[admin] site data saved successfully to Firestore");
+    } catch (error: any) {
+      console.error("[admin] failed to save site data", error);
+      setSaveError(error?.message || "Failed to save site data.");
+    } finally {
+      setSaveLoading(false);
+      window.setTimeout(() => setSaveSuccess(false), 3000);
+    }
+  }, [ensureFirebaseAuthed, data]);
+
   const openNewProject = () => {
     const p = emptyProject();
     setEditingProject(p);
@@ -279,13 +302,22 @@ export function AdminApp() {
       .filter(Boolean);
     const starsRaw = Number(editingProject.stars);
     const stars = Number.isFinite(starsRaw) ? Math.max(0, Math.floor(starsRaw)) : 0;
+    // Defensive: ensure all fields are strings (or arrays for tags/gallery)
+    const safe = (v: any) => (v === undefined || v === null ? "" : v);
     const p: Project = {
       ...editingProject,
-      tags: parseTags(projectTagsStr),
-      imageAlt: editingProject.imageAlt || editingProject.title || "Project",
+      title: safe(editingProject.title),
+      description: safe(editingProject.description),
+      tags: Array.isArray(editingProject.tags) ? editingProject.tags.map(safe) : parseTags(projectTagsStr),
+      imageSrc: safe(editingProject.imageSrc),
+      imageAlt: safe(editingProject.imageAlt) || safe(editingProject.title) || "Project",
+      liveUrl: safe(editingProject.liveUrl),
+      codeUrl: safe(editingProject.codeUrl),
+      shareUrl: safe(editingProject.shareUrl),
       stars,
-      gallery,
-      detailMarkdown: editingProject.detailMarkdown ?? "",
+      gallery: Array.isArray(gallery) ? gallery.map(safe) : [],
+      detailMarkdown: safe(editingProject.detailMarkdown),
+      // Add any other fields you want to sanitize here
     };
     upsertProject(p);
     setEditingProject(null);
@@ -501,6 +533,14 @@ export function AdminApp() {
           </button>
           <button
             type="button"
+            onClick={saveCurrentSiteData}
+            disabled={saveLoading}
+            className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {saveLoading ? "Saving..." : "Save current data"}
+          </button>
+          <button
+            type="button"
             onClick={logout}
             className="rounded-lg border border-white/15 px-3 py-2 text-sm text-zinc-300 hover:bg-white/5"
           >
@@ -518,6 +558,15 @@ export function AdminApp() {
           </button>
         </div>
       </div>
+      {(saveSuccess || saveError) && (
+        <div className="rounded-xl border border-white/10 bg-zinc-950/70 p-4 text-sm">
+          {saveSuccess ? (
+            <p className="text-emerald-300">Saved successfully to Firebase.</p>
+          ) : (
+            <p className="text-red-300">Save failed: {saveError || "Unknown error"}</p>
+          )}
+        </div>
+      )}
 
       <div className="-mx-1 flex gap-1 overflow-x-auto border-b border-white/10 pb-2 px-1 scrollbar-hide">
         {tabBtn("hero", "Hero")}

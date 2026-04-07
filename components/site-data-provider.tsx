@@ -39,6 +39,7 @@ import {
   emptyRecycleBin,
   getDefaultSiteData,
   getMarketingCopyDefaults,
+  loadSiteDataFromFirestore,
   loadSiteDataFromStorage,
   mergeSectionTaglines,
   parseSiteDataPayload,
@@ -159,6 +160,19 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
     let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
 
     (async () => {
+      // Try to load the full siteData document from Firestore if available.
+      try {
+        const fullSiteData = await loadSiteDataFromFirestore();
+        if (!cancelled && fullSiteData) {
+          firestoreReady = true;
+          setUsingFirestore(true);
+          setData(fullSiteData);
+          setHydrated(true);
+        }
+      } catch (error) {
+        console.error("[site-data-provider] failed loading full siteData from Firestore", error);
+      }
+
       // Try to subscribe to Firestore first. If any subscription emits, we treat Firestore as primary.
       try {
         const unsubProjects = subscribeToProjects((projectsArr) => {
@@ -362,9 +376,11 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       });
       // Persist to Firestore collection if available
       try {
-        saveProjectToFirestore(p).catch(() => {});
-      } catch {
-        /* ignore */
+        saveProjectToFirestore(p).catch((error) => {
+          console.error("[site-data-provider] saveProjectToFirestore failed", error, p);
+        });
+      } catch (error) {
+        console.error("[site-data-provider] saveProjectToFirestore threw", error, p);
       }
     },
     [replaceData],
@@ -386,8 +402,12 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
         };
       });
       try {
-        deleteProjectFromFirestore(id).catch(() => {});
-      } catch {}
+        deleteProjectFromFirestore(id).catch((error) => {
+          console.error("[site-data-provider] deleteProjectFromFirestore failed", error, id);
+        });
+      } catch (error) {
+        console.error("[site-data-provider] deleteProjectFromFirestore threw", error, id);
+      }
     },
     [replaceData],
   );
@@ -420,8 +440,12 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
         return { ...prev, blogs: next };
       });
       try {
-        saveBlogToFirestore(b).catch(() => {});
-      } catch {}
+        saveBlogToFirestore(b).catch((error) => {
+          console.error("[site-data-provider] saveBlogToFirestore failed", error, b);
+        });
+      } catch (error) {
+        console.error("[site-data-provider] saveBlogToFirestore threw", error, b);
+      }
     },
     [replaceData],
   );
@@ -442,8 +466,12 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
         };
       });
       try {
-        deleteBlogFromFirestore(id).catch(() => {});
-      } catch {}
+        deleteBlogFromFirestore(id).catch((error) => {
+          console.error("[site-data-provider] deleteBlogFromFirestore failed", error, id);
+        });
+      } catch (error) {
+        console.error("[site-data-provider] deleteBlogFromFirestore threw", error, id);
+      }
     },
     [replaceData],
   );
@@ -452,8 +480,12 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
     (patch: Partial<HeroCms>) => {
       replaceData((prev) => ({ ...prev, hero: { ...prev.hero, ...patch } }));
       try {
-        saveHeroToFirestore(patch as Record<string, any>).catch(() => {});
-      } catch {}
+        saveHeroToFirestore(patch as Record<string, any>).catch((error) => {
+          console.error("[site-data-provider] saveHeroToFirestore failed", error, patch);
+        });
+      } catch (error) {
+        console.error("[site-data-provider] saveHeroToFirestore threw", error, patch);
+      }
     },
     [replaceData],
   );
@@ -462,8 +494,12 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
     (stats: StatCms[]) => {
       replaceData((prev) => ({ ...prev, stats }));
       try {
-        saveStatsToFirestore(stats as Record<string, any>[]).catch(() => {});
-      } catch {}
+        saveStatsToFirestore(stats as Record<string, any>[]).catch((error) => {
+          console.error("[site-data-provider] saveStatsToFirestore failed", error, stats);
+        });
+      } catch (error) {
+        console.error("[site-data-provider] saveStatsToFirestore threw", error, stats);
+      }
     },
     [replaceData],
   );

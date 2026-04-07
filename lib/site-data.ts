@@ -596,6 +596,24 @@ export function parseSiteDataPayload(raw: unknown): SiteDataPayload | null {
 import { getFirestoreClient } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
+/** Recursively replaces all undefined values with empty string or default. */
+function cleanUndefined(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(cleanUndefined);
+  } else if (obj && typeof obj === "object") {
+    const out: Record<string, any> = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (v === undefined) {
+        out[k] = "";
+      } else {
+        out[k] = cleanUndefined(v);
+      }
+    }
+    return out;
+  }
+  return obj;
+}
+
 export function loadSiteDataFromStorage(): SiteDataPayload | null {
   if (typeof window === "undefined") return null;
   try {
@@ -620,6 +638,20 @@ export function loadSiteDataFromStorage(): SiteDataPayload | null {
 
 /** Attempt to persist to both localStorage and Firestore. Firestore calls are best-effort.
  * Keeps localStorage for fast sync and offline fallback. */
+export async function persistSiteDataToFirestore(data: SiteDataPayload): Promise<void> {
+  if (typeof window === "undefined") throw new Error("Client-side only");
+
+  const db = getFirestoreClient();
+  if (!db) throw new Error("Firestore client unavailable");
+
+  // Clean undefined values recursively
+  const cleaned = cleanUndefined(data);
+
+  const ref = doc(db, "siteData", "main");
+  await setDoc(ref, cleaned, { merge: true });
+  console.log("[site-data] persisted siteData to Firestore", ref.path);
+}
+
 export function saveSiteDataToStorage(data: SiteDataPayload) {
   if (typeof window === "undefined") return;
   try {
@@ -631,16 +663,11 @@ export function saveSiteDataToStorage(data: SiteDataPayload) {
 
   // Fire-and-forget: write to Firestore if configured
   try {
-    const db = getFirestoreClient();
-    if (db) {
-      const ref = doc(db, "siteData", "main");
-      // setDoc returns a promise — don't await here to avoid blocking UI
-      setDoc(ref, data, { merge: true }).catch(() => {
-        /* ignore network errors */
-      });
-    }
-  } catch {
-    /* ignore */
+    persistSiteDataToFirestore(data).catch((error) => {
+      console.error("[site-data] failed saving siteData to Firestore", error);
+    });
+  } catch (error) {
+    console.error("[site-data] failed to start Firestore save", error);
   }
 }
 
@@ -657,6 +684,7 @@ export async function loadSiteDataFromFirestore(): Promise<SiteDataPayload | nul
     const parsed = parseSiteDataPayload(raw);
     return parsed;
   } catch (e) {
+    console.error("[site-data] failed loading siteData from Firestore", e);
     return null;
   }
 }
