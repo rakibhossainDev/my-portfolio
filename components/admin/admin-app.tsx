@@ -304,20 +304,21 @@ export function AdminApp() {
     const stars = Number.isFinite(starsRaw) ? Math.max(0, Math.floor(starsRaw)) : 0;
     // Defensive: ensure all fields are strings (or arrays for tags/gallery)
     const safe = (v: any) => (v === undefined || v === null ? "" : v);
+    const slug = editingProject.title ? slugify(editingProject.title) : editingProject.id;
+    const shortLink = generateShortLink(slug);
     const p: Project = {
       ...editingProject,
       title: safe(editingProject.title),
       description: safe(editingProject.description),
-      tags: Array.isArray(editingProject.tags) ? editingProject.tags.map(safe) : parseTags(projectTagsStr),
+      tags: Array.isArray(editingProject.tags) ? editingProject.tags.map(safe) : [],
       imageSrc: safe(editingProject.imageSrc),
       imageAlt: safe(editingProject.imageAlt) || safe(editingProject.title) || "Project",
       liveUrl: safe(editingProject.liveUrl),
       codeUrl: safe(editingProject.codeUrl),
-      shareUrl: safe(editingProject.shareUrl),
+      shareUrl: shortLink,
       stars,
       gallery: Array.isArray(gallery) ? gallery.map(safe) : [],
       detailMarkdown: safe(editingProject.detailMarkdown),
-      // Add any other fields you want to sanitize here
     };
     upsertProject(p);
     setEditingProject(null);
@@ -408,9 +409,8 @@ export function AdminApp() {
       type="button"
       key={id}
       onClick={() => setTab(id)}
-      className={`shrink-0 rounded-lg px-3 py-2.5 text-xs font-medium sm:px-4 sm:text-sm ${
-        tab === id ? "bg-white/10 text-white" : "text-zinc-400 hover:text-zinc-200"
-      }`}
+      className={`shrink-0 rounded-lg px-3 py-2.5 text-xs font-medium sm:px-4 sm:text-sm ${tab === id ? "bg-white/10 text-white" : "text-zinc-400 hover:text-zinc-200"
+        }`}
     >
       {label}
     </button>
@@ -481,7 +481,7 @@ export function AdminApp() {
                 </button>
               </form>
 
-              
+
             </div>
           </div>
         </div>
@@ -491,7 +491,7 @@ export function AdminApp() {
 
   return (
     <div className="space-y-8">
-      
+
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -1839,7 +1839,10 @@ export function AdminApp() {
                 <input
                   className={inputClass}
                   value={projectTagsStr}
-                  onChange={(e) => setProjectTagsStr(e.target.value)}
+                  onChange={(e) => {
+                    setProjectTagsStr(e.target.value);
+                    setEditingProject((prev) => prev ? { ...prev, tags: parseTags(e.target.value) } : prev);
+                  }}
                   placeholder="Flutter, Firebase"
                 />
               </div>
@@ -1897,14 +1900,7 @@ export function AdminApp() {
                 />
               </div>
               <div>
-                <label className={labelClass}>Share link</label>
-                <input
-                  className={inputClass}
-                  value={editingProject.shareUrl ?? ""}
-                  onChange={(e) =>
-                    setEditingProject({ ...editingProject, shareUrl: e.target.value || undefined })
-                  }
-                />
+
               </div>
               <div>
                 <label className={labelClass}>Image alt text (optional)</label>
@@ -1913,6 +1909,34 @@ export function AdminApp() {
                   value={editingProject.imageAlt}
                   onChange={(e) => setEditingProject({ ...editingProject, imageAlt: e.target.value })}
                 />
+              </div>
+              <div>
+                <label className={labelClass}>Project Short Link</label>
+                <div className="mt-1 flex gap-2">
+                  <input
+                    className="w-full rounded-lg border border-white/10 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-400 outline-none cursor-not-allowed"
+                    value={editingProject && editingProject.title ? generateShortLink(slugify(editingProject.title)) : ""}
+                    readOnly
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      const link = editingProject && editingProject.title ? generateShortLink(slugify(editingProject.title)) : "";
+                      if (link) navigator.clipboard.writeText(link);
+                      const btn = e.currentTarget;
+                      const originalText = btn.textContent;
+                      btn.textContent = "Copied!";
+                      btn.classList.replace("text-indigo-400", "text-emerald-400");
+                      setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.classList.replace("text-emerald-400", "text-indigo-400");
+                      }, 2000);
+                    }}
+                    className="whitespace-nowrap shrink-0 rounded-lg bg-zinc-800 px-4 py-2 text-sm font-medium text-indigo-400 hover:bg-zinc-700 transition"
+                  >
+                    Copy
+                  </button>
+                </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button

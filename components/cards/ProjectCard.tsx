@@ -5,6 +5,7 @@ import { GlassCard } from "@/components/cards/GlassCard";
 import { ProjectStarButton } from "@/components/projects/project-star-button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type ProjectCardProps = {
   project: Project;
@@ -44,23 +45,32 @@ function ShareIcon({ className }: { className?: string }) {
 export function ProjectCard({ project, className }: ProjectCardProps) {
   const detailHref = `/projects/${project.id}`;
   const [shareTooltip, setShareTooltip] = useState(false);
+  const router = useRouter();
+  const slug = project.title ? project.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") : project.id;
+  const shortLink = `${typeof window !== "undefined" ? window.location.origin : ""}/projects/${slug}`;
 
-  const handleShare = () => {
-    const projectUrl = `${typeof window !== "undefined" ? window.location.origin : ""}${detailHref}`;
-    const text = `Check out this project by MD Rakib Hossain: ${project.title}`;
+  // Ensure unique tags
+  const uniqueTags = Array.from(new Set(project.tags ?? []));
 
+  const handleShare = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (navigator.share) {
       navigator.share({
         title: project.title,
-        text: text,
-        url: projectUrl,
+        text: `Check out this project by MD Rakib Hossain: ${project.title}`,
+        url: shortLink,
       }).catch((err) => console.log("Share cancelled:", err));
     } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(projectUrl);
+      navigator.clipboard.writeText(shortLink);
       setShareTooltip(true);
       setTimeout(() => setShareTooltip(false), 2000);
     }
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    const tag = (e.target as HTMLElement).tagName.toLowerCase();
+    if (tag === "button" || tag === "a" || (e.target as HTMLElement).closest("button, a")) return;
+    router.push(detailHref);
   };
 
   return (
@@ -70,6 +80,11 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
         "relative group flex h-full flex-col overflow-hidden p-0 rounded-3xl shadow-lg transition-shadow hover:shadow-2xl min-h-[480px] md:min-h-0",
         className
       )}
+      onClick={handleCardClick}
+      role="button"
+      aria-label={`View details for ${project.title}`}
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleCardClick(e as any); }}
     >
       {/* Top overlay: star badge (left) and share icon (right) over the image */}
       <div className="absolute top-3 left-3 right-3 z-30 flex items-start justify-between pointer-events-none">
@@ -81,7 +96,7 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
             className="bg-white/20 backdrop-blur-md border-white/30"
           />
         </div>
-        <div className="pointer-events-auto">
+        <div className="pointer-events-auto relative">
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -90,10 +105,15 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
             }}
             title="Share project"
             aria-label="Share project"
-            className="h-10 w-10 rounded-full inline-flex items-center justify-center bg-white/10 backdrop-blur-md border border-white/20 text-white transition-all duration-300 hover:scale-105 active:scale-95"
+            className="h-10 w-10 rounded-full inline-flex items-center justify-center bg-white/80 backdrop-blur-md border border-white/30 text-zinc-800 shadow-lg transition-all duration-300 hover:scale-105 active:scale-95"
           >
             <ShareIcon />
           </button>
+          {shareTooltip && (
+            <div className="absolute right-0 top-12 whitespace-nowrap rounded-md bg-zinc-800 px-2 py-1 text-xs text-white shadow-md animate-in fade-in zoom-in duration-200">
+              Link Copied!
+            </div>
+          )}
         </div>
       </div>
 
@@ -127,10 +147,10 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
         <p className="mt-1 text-sm leading-relaxed text-slate-600 line-clamp-3 overflow-hidden">{project.description}</p>
 
         <div className="mt-2 sm:mt-4">
-          <div className="flex gap-2 overflow-x-auto flex-nowrap pb-2 sm:overflow-visible sm:flex-wrap sm:pb-0">
-            {project.tags.map((t) => (
+          <div className="flex gap-2 overflow-x-auto flex-nowrap pb-2 sm:overflow-visible sm:flex-wrap sm:pb-0 line-clamp-2">
+            {uniqueTags.map((t, i) => (
               <span
-                key={t}
+                key={`${project.id}-${t}-${i}`}
                 className="flex-shrink-0 inline-block rounded-full border border-violet-200/80 bg-violet-50/80 px-2.5 py-0.5 text-xs font-medium text-violet-700 backdrop-blur-sm"
               >
                 {t}
@@ -141,43 +161,27 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
 
         {/* Buttons row: pinned to bottom, compact on mobile (icons only), full on md+ */}
         <div className="mt-auto w-full">
-          <div className="flex items-center justify-between gap-3 px-4 pb-4 pt-3 sm:px-6">
-            <div className="flex items-center gap-3">
-              {/* Keep top-left star accessible visually by leaving it in overlay; duplicate optional star area can go here if desired */}
-            </div>
-            {project.liveUrl !== "#" && (
-              <a
-                href={project.liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Open live demo"
-                aria-label="Open live demo"
-                className="h-11 px-4 py-2 rounded-2xl inline-flex items-center justify-center gap-2 text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95 whitespace-nowrap bg-gradient-to-r from-violet-600 to-indigo-600 text-white border border-white/10"
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-                <span>Demo ↗</span>
-              </a>
-            )}
-
-            {project.codeUrl !== "#" && (
-              <a
-                href={project.codeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="View source code"
-                aria-label="View source code"
-                className="h-11 px-4 py-2 rounded-2xl inline-flex items-center justify-center gap-2 text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95 whitespace-nowrap bg-slate-900 text-white border border-slate-800/60 shadow-sm"
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-              >
-                <GitHubIcon className="h-4 w-4" />
-                <span>Code ↗</span>
-              </a>
-            )}
-
-            {/* removed bottom Share button - share is available in the top-right overlay */}
+          <div className="flex flex-wrap w-full justify-center items-center gap-3 px-4 pb-4 pt-3 sm:gap-4 sm:px-6">
+            <a
+              href={project.liveUrl || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 min-w-[110px] whitespace-nowrap rounded-lg bg-emerald-600 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-emerald-500"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Live Demo
+            </a>
+            <a
+              href={project.codeUrl || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 min-w-[110px] whitespace-nowrap flex items-center justify-center rounded-lg border border-violet-500/40 bg-violet-500/10 px-3 py-2 text-center text-sm font-semibold text-violet-400 hover:bg-violet-500/20"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span className="inline-flex items-center gap-1">
+                <GitHubIcon /> Source
+              </span>
+            </a>
           </div>
         </div>
       </div>
