@@ -132,8 +132,8 @@ export function ContactSection() {
                 Send Message
               </button>
               {sent && (
-                <p className="text-center text-sm text-emerald-700" role="status">
-                  Message sent. It appears in Admin → Inbox for this browser.
+                <p className="text-center text-sm font-medium text-emerald-700" role="status">
+                  Message sent successfully! I'll get back to you soon.
                 </p>
               )}
             </form>

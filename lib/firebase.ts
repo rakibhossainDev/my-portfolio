@@ -15,7 +15,7 @@ import {
 } from "firebase/firestore";
 import type { Project } from "@/data/projects";
 import type { BlogPost } from "@/data/blog";
-import type { StatCms, HeroCms } from "@/lib/site-data";
+import type { StatCms, HeroCms, ContactMessage, AdEntry } from "@/lib/site-data";
 
 // Lightweight helpers for common CRUD/listen operations used by the admin and site provider.
 export function saveProjectToFirestore(p: Record<string, any>) {
@@ -341,3 +341,82 @@ export function signOutSafe() {
 export function isFirebaseConfigAvailable() {
   return !!(typeof window !== "undefined" && process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
 }
+
+// Ads operations
+export function saveAdToFirestore(ad: Record<string, any>) {
+  const app = initFirebase();
+  if (!app) return Promise.reject(new Error("Firebase not initialized"));
+  const db = getFirestore(app);
+  const ref = doc(db, "ads", ad.id);
+  return setDoc(ref, ad, { merge: true });
+}
+
+export function deleteAdFromFirestore(id: string) {
+  const app = initFirebase();
+  if (!app) return Promise.reject(new Error("Firebase not initialized"));
+  const db = getFirestore(app);
+  const ref = doc(db, "ads", id);
+  return deleteDoc(ref);
+}
+
+export function subscribeToAds(onChange: (items: AdEntry[]) => void) {
+  const app = initFirebase();
+  if (!app) return () => {};
+  const db = getFirestore(app);
+  const q = query(collection(db, "ads"));
+  const unsub = onSnapshot(q, (snap) => {
+    const arr = snap.docs.map((d) => {
+      const data = d.data() as DocumentData;
+      return {
+        id: d.id,
+        imageUrl: data.imageUrl ?? "",
+        redirectUrl: data.redirectUrl ?? "",
+        isActive: data.isActive ?? true,
+      } as AdEntry;
+    });
+    onChange(arr);
+  });
+  return unsub;
+}
+
+// Messages operations
+export function saveMessageToFirestore(msg: Record<string, any>) {
+  const app = initFirebase();
+  if (!app) return Promise.reject(new Error("Firebase not initialized"));
+  const db = getFirestore(app);
+  const ref = doc(db, "messages", msg.id);
+  return setDoc(ref, msg, { merge: true });
+}
+
+export function deleteMessageFromFirestore(id: string) {
+  const app = initFirebase();
+  if (!app) return Promise.reject(new Error("Firebase not initialized"));
+  const db = getFirestore(app);
+  const ref = doc(db, "messages", id);
+  return deleteDoc(ref);
+}
+
+export function subscribeToMessages(onChange: (items: ContactMessage[]) => void) {
+  const app = initFirebase();
+  if (!app) return () => {};
+  const db = getFirestore(app);
+  const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+  const unsub = onSnapshot(q, (snap) => {
+    const arr = snap.docs.map((d) => {
+      const data = d.data() as DocumentData;
+      return {
+        id: d.id,
+        name: data.name ?? "",
+        email: data.email ?? "",
+        subject: data.subject ?? "",
+        message: data.message ?? "",
+        createdAt: data.createdAt ?? new Date().toISOString(),
+        status: data.status ?? "unread",
+        isDeleted: !!data.isDeleted,
+      } as ContactMessage;
+    });
+    onChange(arr);
+  });
+  return unsub;
+}
+

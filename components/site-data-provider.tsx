@@ -33,6 +33,12 @@ import {
   saveBlogToFirestore,
   deleteBlogFromFirestore,
   getAllBlogsOnce,
+  subscribeToAds,
+  saveAdToFirestore,
+  deleteAdFromFirestore,
+  subscribeToMessages,
+  saveMessageToFirestore,
+  deleteMessageFromFirestore,
 } from "@/lib/firebase";
 import { RESUME_DOWNLOAD_FILENAME, RESUME_HREF } from "@/lib/resume";
 import {
@@ -209,6 +215,22 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
           setHydrated(true);
         });
 
+        const unsubAds = subscribeToAds((adsArr) => {
+          if (cancelled) return;
+          firestoreReady = true;
+          setUsingFirestore(true);
+          replaceData((prev) => ({ ...prev, ads: adsArr }));
+          setHydrated(true);
+        });
+
+        const unsubMessages = subscribeToMessages((msgsArr) => {
+          if (cancelled) return;
+          firestoreReady = true;
+          setUsingFirestore(true);
+          replaceData((prev) => ({ ...prev, messages: msgsArr }));
+          setHydrated(true);
+        });
+
         // If subscriptions don't report quickly, fallback to localStorage so the app stays usable offline.
         fallbackTimer = setTimeout(async () => {
           if (firestoreReady || cancelled) return;
@@ -238,6 +260,12 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
           } catch {}
           try {
             unsubStats && unsubStats();
+          } catch {}
+          try {
+            unsubAds && unsubAds();
+          } catch {}
+          try {
+            unsubMessages && unsubMessages();
           } catch {}
         };
       } catch {
@@ -270,8 +298,8 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
 
     (async () => {
       revoke(heroBlobRef);
-      let heroSrc: string = DEFAULT_HERO_IMAGE;
-      if (data.assets.heroImageKey) {
+      let heroSrc: string = data.assets.heroImageUrl || DEFAULT_HERO_IMAGE;
+      if (data.assets.heroImageKey && !data.assets.heroImageUrl) {
         const blob = await getPortfolioBlob(data.assets.heroImageKey);
         if (!cancelled && blob) {
           heroSrc = URL.createObjectURL(blob);
@@ -281,8 +309,8 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       if (!cancelled) setResolvedHeroImageSrc(heroSrc);
 
       revoke(aboutBlobRef);
-      let aboutSrc: string = DEFAULT_ABOUT_IMAGE;
-      if (data.assets.aboutImageKey) {
+      let aboutSrc: string = data.assets.aboutImageUrl || DEFAULT_ABOUT_IMAGE;
+      if (data.assets.aboutImageKey && !data.assets.aboutImageUrl) {
         const blob = await getPortfolioBlob(data.assets.aboutImageKey);
         if (!cancelled && blob) {
           aboutSrc = URL.createObjectURL(blob);
@@ -292,9 +320,9 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
       if (!cancelled) setResolvedAboutImageSrc(aboutSrc);
 
       revoke(resumeBlobRef);
-      let resumeHref: string = RESUME_HREF;
-      let resumeName = RESUME_DOWNLOAD_FILENAME;
-      if (data.assets.resumeKey) {
+      let resumeHref: string = data.assets.resumeUrl || RESUME_HREF;
+      let resumeName = data.assets.resumeFileName || RESUME_DOWNLOAD_FILENAME;
+      if (data.assets.resumeKey && !data.assets.resumeUrl) {
         const blob = await getPortfolioBlob(data.assets.resumeKey);
         if (!cancelled && blob) {
           resumeHref = URL.createObjectURL(blob);
@@ -317,6 +345,9 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
     data.assets.aboutImageKey,
     data.assets.resumeKey,
     data.assets.resumeFileName,
+    data.assets.heroImageUrl,
+    data.assets.aboutImageUrl,
+    data.assets.resumeUrl,
   ]);
 
   useEffect(
@@ -574,6 +605,11 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
   const setAds = useCallback(
     (ads: import("@/lib/site-data").AdEntry[]) => {
       replaceData((prev) => ({ ...prev, ads }));
+      try {
+        ads.forEach(ad => {
+          saveAdToFirestore(ad).catch((e) => console.error("Failed to save ad", e));
+        });
+      } catch {}
     },
     [replaceData],
   );
@@ -681,15 +717,20 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
         ...prev,
         messages: [msg, ...prev.messages],
       }));
+      try {
+        saveMessageToFirestore(msg).catch((e) => console.error("Failed to save msg", e));
+      } catch {}
     },
     [replaceData],
   );
 
   const deleteContactMessage = useCallback(
     (id: string) => {
+      let itemToRecycle: ContactMessage | undefined;
       replaceData((prev) => {
         const item = prev.messages.find((m) => m.id === id);
         if (!item) return prev;
+        itemToRecycle = item;
         const deletedAt = new Date().toISOString();
         return {
           ...prev,
@@ -700,6 +741,11 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
           },
         };
       });
+      if (itemToRecycle) {
+        try {
+          deleteMessageFromFirestore(id).catch((e) => console.error("Failed to delete msg", e));
+        } catch {}
+      }
     },
     [replaceData],
   );
@@ -768,9 +814,11 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
 
   const restoreRecycleMessage = useCallback(
     (id: string) => {
+      let itemToRestore: ContactMessage | undefined;
       replaceData((prev) => {
         const entry = prev.recycleBin.messages.find((e) => e.item.id === id);
         if (!entry) return prev;
+        itemToRestore = entry.item;
         const rest = prev.recycleBin.messages.filter((e) => e.item.id !== id);
         return {
           ...prev,
@@ -778,6 +826,11 @@ export function SiteDataProvider({ children }: { children: React.ReactNode }) {
           recycleBin: { ...prev.recycleBin, messages: rest },
         };
       });
+      if (itemToRestore) {
+        try {
+          saveMessageToFirestore(itemToRestore).catch((e) => console.error("Failed to save msg", e));
+        } catch {}
+      }
     },
     [replaceData],
   );
