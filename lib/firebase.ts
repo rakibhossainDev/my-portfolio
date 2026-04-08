@@ -371,7 +371,7 @@ export function subscribeToAds(onChange: (items: AdEntry[]) => void) {
         id: d.id,
         imageUrl: data.imageUrl ?? "",
         redirectUrl: data.redirectUrl ?? "",
-        isActive: data.isActive ?? true,
+        isActive: typeof data.isActive === "boolean" ? data.isActive : true,
       } as AdEntry;
     });
     onChange(arr);
@@ -409,10 +409,8 @@ export function subscribeToMessages(onChange: (items: ContactMessage[]) => void)
         name: data.name ?? "",
         email: data.email ?? "",
         subject: data.subject ?? "",
-        message: data.message ?? "",
+        body: data.message ?? data.body ?? "",
         createdAt: data.createdAt ?? new Date().toISOString(),
-        status: data.status ?? "unread",
-        isDeleted: !!data.isDeleted,
       } as ContactMessage;
     });
     onChange(arr);
