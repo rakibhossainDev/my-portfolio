@@ -5,10 +5,12 @@ import { HorizontalScrollHint } from "@/components/ui/horizontal-scroll-hint";
 import { usePreferences } from "@/components/preferences-provider";
 import { useSiteData } from "@/components/site-data-provider";
 import { blogSectionBn } from "@/data/translations";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 export function BlogSection() {
   const { locale } = usePreferences();
-  const { blogs, sectionTaglines } = useSiteData();
+  const { blogs, sectionTaglines, hydrated } = useSiteData();
   const bn = locale === "bn";
 
   const heading = bn ? blogSectionBn.heading : "Blog";
@@ -20,27 +22,49 @@ export function BlogSection() {
       className="scroll-mt-24 border-t border-white/40 bg-white/15 py-6 backdrop-blur-sm sm:py-8 md:py-9"
     >
       <div className="mx-auto max-w-6xl px-3 sm:px-6 lg:px-8">
-        <header className="max-w-2xl">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">{heading}</h2>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600 sm:text-base md:text-lg">{sub}</p>
-        </header>
+        <div className={cn("transition-all duration-700", hydrated ? "fade-in-content" : "opacity-0")}>
+          <header className="max-w-2xl">
+            {!hydrated ? (
+              <Skeleton className="h-10 w-32" />
+            ) : (
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
+                {heading}
+              </h2>
+            )}
+            <div className="mt-2 text-sm leading-relaxed text-slate-600 sm:text-base md:text-lg" suppressHydrationWarning>
+              {!hydrated ? <Skeleton className="h-7 w-full max-w-md" /> : sub}
+            </div>
+          </header>
 
-        <HorizontalScrollHint
-          className="mt-5 sm:mt-6"
-          hintLabel="Scroll sideways for more posts"
-          showScrollButtons
-          scrollClassName="-mx-1 px-1 pb-1 sm:-mx-0 sm:px-0"
-        >
-          <ul className="flex w-max gap-4 pb-2 sm:gap-6">
-            {blogs.map((post) => (
-              <li key={post.id} className="w-[min(100vw-2.5rem,300px)] shrink-0 sm:w-[300px]">
-                <article className="h-full">
-                  <BlogCard post={post} className="h-full" />
-                </article>
-              </li>
-            ))}
-          </ul>
-        </HorizontalScrollHint>
+          <HorizontalScrollHint
+            className="mt-5 sm:mt-6"
+            hintLabel="Scroll sideways for more posts"
+            showScrollButtons
+            scrollClassName="-mx-1 px-1 pb-1 sm:-mx-0 sm:px-0"
+          >
+            <ul className="flex w-max gap-4 pb-2 sm:gap-6">
+              {!hydrated ? (
+                <>
+                  {[1, 2, 3].map((i) => (
+                    <li key={i} className="w-[min(100vw-2.5rem,300px)] shrink-0 sm:w-[300px]">
+                      <div className="h-64 h-full rounded-2xl border border-white/50 bg-white/20 overflow-hidden">
+                        <Skeleton className="h-full w-full" />
+                      </div>
+                    </li>
+                  ))}
+                </>
+              ) : (
+                blogs.map((post) => (
+                  <li key={post.id} className="w-[min(100vw-2.5rem,300px)] shrink-0 sm:w-[300px]">
+                    <article className="h-full">
+                      <BlogCard post={post} className="h-full" />
+                    </article>
+                  </li>
+                ))
+              )}
+            </ul>
+          </HorizontalScrollHint>
+        </div>
       </div>
     </section>
   );

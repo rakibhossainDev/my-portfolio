@@ -42,9 +42,11 @@ export function SafeImage({
   priority,
 }: SafeImageProps) {
   const [current, setCurrent] = useState(() => normalizeImageSrc(src));
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     setCurrent(normalizeImageSrc(src));
+    setLoaded(false); // Reset loaded state when src changes
   }, [src]);
 
   const handleError = useCallback(() => {
@@ -53,67 +55,73 @@ export function SafeImage({
       if (prev === FILE_FALLBACK) return INLINE_IMAGE_FALLBACK;
       return FILE_FALLBACK;
     });
+    setLoaded(true); // Treat error as 'loaded' so fallback shows
+  }, []);
+
+  const handleLoad = useCallback(() => {
+    setLoaded(true);
   }, []);
 
   const remote = isRemoteImageSrc(current);
+  
+  const containerClasses = cn(
+    "relative overflow-hidden bg-slate-100/50",
+    fill ? "h-full w-full" : ""
+  );
+
+  const imageClasses = cn(
+    "transition-opacity duration-500 ease-in-out",
+    loaded ? "opacity-100" : "opacity-0",
+    className
+  );
+
+  const placeholder = !loaded && (
+    <div className="absolute inset-0 z-10">
+      <div className="skeleton h-full w-full" />
+    </div>
+  );
 
   if (remote) {
-    if (fill) {
-      return (
-        // eslint-disable-next-line @next/next/no-img-element -- intentional: arbitrary remote URLs without image config
+    return (
+      <div className={containerClasses}>
+        {placeholder}
+        {/* eslint-disable-next-line @next/next/no-img-element -- intentional: arbitrary remote URLs without image config */}
         <img
           src={current}
           alt={alt}
-          className={cn("absolute inset-0 h-full w-full object-cover", className)}
+          className={cn(
+            fill ? "absolute inset-0 h-full w-full object-cover" : "",
+            imageClasses
+          )}
+          width={!fill ? width : undefined}
+          height={!fill ? height : undefined}
           loading={priority ? "eager" : "lazy"}
           decoding="async"
           onError={handleError}
+          onLoad={handleLoad}
         />
-      );
-    }
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={current}
-        alt={alt}
-        width={width}
-        height={height}
-        className={className}
-        loading={priority ? "eager" : "lazy"}
-        decoding="async"
-        onError={handleError}
-      />
+      </div>
     );
   }
 
   const useUnoptimized = current.startsWith("data:");
 
-  if (fill) {
-    return (
+  return (
+    <div className={containerClasses}>
+      {placeholder}
       <Image
         src={current}
         alt={alt}
-        fill
-        className={className}
+        fill={fill}
+        width={!fill ? (width ?? 1) : undefined}
+        height={!fill ? (height ?? 1) : undefined}
+        className={imageClasses}
         sizes={sizes}
         priority={priority}
         unoptimized={useUnoptimized}
         onError={handleError}
+        onLoadingComplete={handleLoad}
       />
-    );
-  }
-
-  return (
-    <Image
-      src={current}
-      alt={alt}
-      width={width ?? 1}
-      height={height ?? 1}
-      className={className}
-      sizes={sizes}
-      priority={priority}
-      unoptimized={useUnoptimized}
-      onError={handleError}
-    />
+    </div>
   );
 }

@@ -8,6 +8,7 @@ import { useSiteData } from "@/components/site-data-provider";
 import { site } from "@/data/site";
 import { homeUiBn } from "@/data/translations";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function WhatsAppGlyph({ className }: { className?: string }) {
   return (
@@ -19,7 +20,7 @@ function WhatsAppGlyph({ className }: { className?: string }) {
 
 export function HeroSection() {
   const { locale } = usePreferences();
-  const { hero, resolvedHeroImageSrc } = useSiteData();
+  const { hero, resolvedHeroImageSrc, hydrated } = useSiteData();
   const bn = locale === "bn";
 
   const badge = bn ? hero.badgeBn : hero.badgeEn;
@@ -36,46 +37,64 @@ export function HeroSection() {
       </div>
 
       <div className="relative mx-auto grid max-w-6xl gap-6 px-3 py-5 sm:gap-8 sm:px-6 sm:py-6 lg:grid-cols-2 lg:items-center lg:gap-6 lg:px-8 lg:py-8">
-        <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-violet-200/80 bg-white/50 px-3 py-1 text-sm font-medium text-violet-800 shadow-sm backdrop-blur-md">
-            <span aria-hidden>👋</span>
-            {badge}
-          </span>
+        <div className={cn("transition-all duration-700", hydrated ? "fade-in-content" : "opacity-0")}>
+          {!hydrated ? (
+            <div className="space-y-4" suppressHydrationWarning>
+              <Skeleton className="h-7 w-32 rounded-full" />
+              <Skeleton className="h-12 w-full max-w-md" />
+              <Skeleton className="h-8 w-64" />
+              <div className="space-y-3">
+                <Skeleton className="h-7 w-full max-w-lg" />
+                <Skeleton className="h-7 w-full max-w-md" />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Skeleton className="h-12 w-36 rounded-xl" />
+                <Skeleton className="h-12 w-36 rounded-xl" />
+              </div>
+            </div>
+          ) : (
+            <>
+              <span className="inline-flex items-center gap-2 rounded-full border border-violet-200/80 bg-white/50 px-3 py-1 text-sm font-medium text-violet-800 shadow-sm backdrop-blur-md">
+                <span aria-hidden>👋</span>
+                {badge}
+              </span>
 
-          <h1 className="mt-3 text-[1.65rem] font-bold leading-tight tracking-tight text-slate-900 sm:mt-4 sm:text-3xl sm:leading-tight md:text-4xl lg:text-[3.1rem] lg:leading-[1.1]">
-            {site.hero.greeting}{" "}
-            <span className="bg-gradient-to-r from-violet-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              {site.hero.name}
-            </span>
-          </h1>
+              <h1 className="mt-3 text-[1.65rem] font-bold leading-tight tracking-tight text-slate-900 sm:mt-4 sm:text-3xl sm:leading-tight md:text-4xl lg:text-[3.1rem] lg:leading-[1.1]">
+                {site.hero.greeting}{" "}
+                <span className="bg-gradient-to-r from-violet-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  {site.hero.name}
+                </span>
+              </h1>
 
-          <h2 className="mt-2 text-lg font-semibold text-slate-700 sm:text-xl">{role}</h2>
+              <h2 className="mt-2 text-lg font-semibold text-slate-700 sm:text-xl">{role}</h2>
 
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
-            {description}
-          </p>
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
+                {description}
+              </p>
 
-          <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:items-center">
-            <Link
-              href="/#projects"
-              className={cn(
-                "btn-interactive inline-flex items-center justify-center rounded-xl border-2 border-violet-500/40",
-                "bg-white/60 px-6 py-3 text-sm font-semibold text-violet-700 shadow-md backdrop-blur-md",
-                "hover:border-violet-500 hover:bg-white/80",
-              )}
-            >
-              {viewProjects}
-            </Link>
-            <a
-              href={site.hero.hireMeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-interactive inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25"
-            >
-              <WhatsAppGlyph className="h-5 w-5 shrink-0 text-white" />
-              {hireMe}
-            </a>
-          </div>
+              <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:items-center">
+                <Link
+                  href="/#projects"
+                  className={cn(
+                    "btn-interactive inline-flex items-center justify-center rounded-xl border-2 border-violet-500/40",
+                    "bg-white/60 px-6 py-3 text-sm font-semibold text-violet-700 shadow-md backdrop-blur-md",
+                    "hover:border-violet-500 hover:bg-white/80",
+                  )}
+                >
+                  {viewProjects}
+                </Link>
+                <a
+                  href={site.hero.hireMeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-interactive inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25"
+                >
+                  <WhatsAppGlyph className="h-5 w-5 shrink-0 text-white" />
+                  {hireMe}
+                </a>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="relative mx-auto flex w-full max-w-[340px] justify-center sm:max-w-[380px] lg:mx-0 lg:max-w-none lg:justify-end">
